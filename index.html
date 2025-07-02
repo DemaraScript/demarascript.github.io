@@ -2,14 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Две утилиты: Выравнивание кликов и Преобразование multiclick</title>
+  <title>Инструменты для кликов и команд</title>
   <style>
+    /* === Общие стили и темная тема === */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', sans-serif;
       max-width: 950px;
       margin: 20px auto;
-      background: #fafafa;
+      background: #121212;
+      color: #ddd;
       padding: 10px;
+      transition: background-color 0.5s ease;
+      user-select: none;
+    }
+    a, button {
+      user-select: auto;
     }
     .tabs {
       display: flex;
@@ -20,45 +28,74 @@
       padding: 10px 24px;
       font-size: 16px;
       cursor: pointer;
-      border: 1px solid #aaa;
-      background: #eee;
+      border: 1px solid #444;
+      background: #222;
       border-radius: 6px 6px 0 0;
       outline: none;
-      transition: background 0.2s;
+      color: #ddd;
+      transition: background 0.3s, color 0.3s;
+      user-select: none;
+    }
+    .tab-btn:hover:not(.active) {
+      background: #333;
     }
     .tab-btn.active {
-      background: #fff;
-      border-bottom: 1px solid #fff;
+      background: #121212;
+      border-bottom: 1px solid #121212;
       font-weight: bold;
+      color: #4caf50;
     }
     .tab-content {
       display: none;
-      border: 1px solid #aaa;
+      border: 1px solid #444;
       border-radius: 0 6px 6px 6px;
-      background: #fff;
+      background: #1e1e1e;
       padding: 24px 18px 18px 18px;
-      min-height: 400px;
+      min-height: 450px;
+      color: #ddd;
+      user-select: text;
+      position: relative;
     }
     .tab-content.active {
       display: block;
     }
-    /* Стили из первого кода */
-    textarea {
+
+    /* === Первая вкладка === */
+    #tab-align textarea {
       width: 100%;
       font-family: monospace;
-      font-size: 14px;
-      padding: 10px;
+      font-size: 15px;
+      padding: 14px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 1px solid #555;
+      border-radius: 6px;
       resize: vertical;
       margin-bottom: 10px;
+      min-height: 280px; /* увеличено */
+      background: #222;
+      color: #eee;
+      transition: border-color 0.3s;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
+    #tab-align textarea:focus {
+      border-color: #4caf50;
+      outline: none;
+      background: #2a2a2a;
+    }
+    #tab-align button {
+      padding: 12px 28px;
+      font-size: 17px;
       cursor: pointer;
       margin-bottom: 15px;
+      background: #4caf50;
+      border: none;
+      border-radius: 6px;
+      color: #121212;
+      font-weight: 600;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    #tab-align button:hover {
+      background: #45a049;
     }
     #scaleControl {
       margin-bottom: 15px;
@@ -66,6 +103,8 @@
       align-items: center;
       gap: 10px;
       font-size: 14px;
+      color: #ccc;
+      user-select: none;
     }
     #canvasesContainer {
       display: flex;
@@ -74,45 +113,158 @@
       margin-bottom: 15px;
     }
     canvas {
-      border: 1px solid #ccc;
-      background: #fff;
+      border: 1px solid #555;
+      background: #121212;
       display: block;
+      border-radius: 6px;
     }
     #info {
       font-size: 14px;
-      color: #333;
+      color: #ddd;
       white-space: pre-wrap;
-      background: #f0f0f0;
-      border: 1px solid #ddd;
-      padding: 8px;
-      border-radius: 4px;
+      background: #222;
+      border: 1px solid #444;
+      padding: 10px 14px;
+      border-radius: 6px;
       user-select: text;
       min-height: 80px;
+      position: relative;
+      overflow-wrap: break-word;
+      transition: background-color 0.8s ease;
+      margin-bottom: 15px;
     }
-    /* Стили из второго кода */
+    #info .close-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #aaa;
+      font-size: 18px;
+      user-select: none;
+      transition: color 0.3s;
+    }
+    #info .close-btn:hover {
+      color: #f44336;
+    }
+
+    /* === Вторая вкладка === */
+    #tab-multi textarea {
+      width: 100%;
+      height: 120px;
+      font-size: 16px;
+      padding: 12px;
+      box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #222;
+      color: #eee;
+      resize: vertical;
+      transition: border-color 0.3s;
+      font-family: monospace;
+    }
+    #tab-multi textarea:focus {
+      border-color: #4caf50;
+      outline: none;
+      background: #2a2a2a;
+    }
+    #tab-multi button {
+      margin-top: 10px;
+      padding: 12px 28px;
+      font-size: 17px;
+      cursor: pointer;
+      background: #4caf50;
+      border: none;
+      border-radius: 6px;
+      color: #121212;
+      font-weight: 600;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    #tab-multi button:hover {
+      background: #45a049;
+    }
     #output {
-      background: #f6f6f6;
-      padding: 10px;
+      background: #222;
+      padding: 12px;
       white-space: pre-wrap;
       word-break: break-word;
-      min-height: 100px;
+      min-height: 120px;
       margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      color: #ddd;
+      position: relative;
+      transition: background-color 0.8s ease;
+      user-select: text;
     }
-    /* Заголовки */
-    h2, h3, h4 {
+    #tab-multi .hint {
+      color: #999;
+      font-size: 13px;
       margin-bottom: 10px;
+      font-style: italic;
+      user-select: none;
+    }
+
+    /* === Анимация фона результата === */
+    @keyframes bgGreenPulse {
+      0%, 100% { background-color: #2e7d32; }
+      50% { background-color: #4caf50; }
+    }
+    @keyframes bgRedPulse {
+      0%, 100% { background-color: #b71c1c; }
+      50% { background-color: #f44336; }
+    }
+    @keyframes bgYellowPulse {
+      0%, 100% { background-color: #f9a825; }
+      50% { background-color: #ffeb3b; }
+    }
+    .bg-success {
+      animation: bgGreenPulse 2s infinite;
+      color: #e8f5e9 !important;
+    }
+    .bg-error {
+      animation: bgRedPulse 2s infinite;
+      color: #ffebee !important;
+    }
+    .bg-warning {
+      animation: bgYellowPulse 2s infinite;
+      color: #fffde7 !important;
+    }
+
+    /* === Всплывающее уведомление === */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #eee;
+      padding: 14px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 9999;
+      box-shadow: 0 0 15px rgba(0,0,0,0.7);
+      user-select: none;
+    }
+    #toast.show {
+      opacity: 1;
+      pointer-events: auto;
     }
   </style>
 </head>
 <body>
   <div class="tabs">
-    <button class="tab-btn active" data-tab="align">Выравнивание кликов</button>
-    <button class="tab-btn" data-tab="multi">Преобразование multiclick</button>
+    <button class="tab-btn active" data-tab="align">Стабилизировать клики</button>
+    <button class="tab-btn" data-tab="multi">Преобразователь в команды</button>
   </div>
 
-  <!-- Вкладка 1: Выравнивание кликов -->
+  <!-- Вкладка 1: Стабилизировать клики -->
   <div class="tab-content active" id="tab-align">
-    <h2>Выровнять клики по 4 слоям с Canvas (без текста в выводе)</h2>
+    <h2>Стабилизировать клики по 4 слоям с Canvas (без текста в выводе)</h2>
     <textarea id="inputArea" placeholder="Вставьте сюда клики, например:
 click 222 788
 click 457 788
@@ -124,17 +276,25 @@ click 695 788
       <input type="range" id="scaleRange" min="0.1" max="2" step="0.05" value="0.4" />
     </div>
     <div id="canvasesContainer"></div>
-    <div id="info">Результат выравнивания появится здесь и автоматически скопируется в буфер обмена.</div>
+
+    <div id="info">
+      <span class="close-btn" title="Закрыть окно результата">&times;</span>
+      Результат выравнивания появится здесь и автоматически скопируется в буфер обмена.
+    </div>
   </div>
 
-  <!-- Вкладка 2: Преобразование multiclick -->
+  <!-- Вкладка 2: Преобразователь в команды -->
   <div class="tab-content" id="tab-multi">
     <h3>Введите сообщение:</h3>
     <textarea id="input" placeholder="Введите символы..."></textarea>
     <button id="multiBtn">Преобразовать и скопировать</button>
+    <div class="hint">Поддерживаются символы: ЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮ ,?/</div>
     <h4>Результат:</h4>
     <pre id="output"></pre>
   </div>
+
+  <!-- Всплывающее уведомление -->
+  <div id="toast"></div>
 
   <script>
     // Переключение вкладок
@@ -147,7 +307,7 @@ click 695 788
       });
     });
 
-    // --- Код первой вкладки (выравнивание кликов) ---
+    // --- Вкладка 1: Стабилизировать клики ---
     (() => {
       const inputArea = document.getElementById('inputArea');
       const processBtn = document.getElementById('processBtn');
@@ -155,6 +315,7 @@ click 695 788
       const info = document.getElementById('info');
       const scaleRange = document.getElementById('scaleRange');
       const scaleValueLabel = document.getElementById('scaleValue');
+      const closeBtn = info.querySelector('.close-btn');
 
       const BASE_WIDTH = 860;
       const BASE_HEIGHT = 120;
@@ -242,7 +403,7 @@ click 695 788
 
         const pointSize = BASE_POINT_SIZE * scaleFactor;
 
-        ctx.fillStyle = '#007bff';
+        ctx.fillStyle = '#2196f3';
         points.forEach(p => {
           const x = scale(p.x, minX, maxX, pointSize/2, width - pointSize/2);
           const y = scale(p.y, minY, maxY, height - pointSize/2, pointSize/2);
@@ -254,7 +415,7 @@ click 695 788
           ctx.stroke();
         });
 
-        ctx.fillStyle = '#28a745';
+        ctx.fillStyle = '#4caf50';
         alignedPoints.forEach(p => {
           const x = scale(p.x, minX, maxX, pointSize/2, width - pointSize/2);
           const y = scale(p.y, minY, maxY, height - pointSize/2, pointSize/2);
@@ -304,8 +465,21 @@ click 695 788
         }
       }
 
+      // Закрытие/открытие блока результата
+      closeBtn.addEventListener('click', () => {
+        if(info.style.display === 'none') {
+          info.style.display = 'block';
+        } else {
+          info.style.display = 'none';
+        }
+      });
+
       processBtn.addEventListener('click', () => {
+        info.style.display = 'block';
+        info.classList.remove('bg-error', 'bg-success', 'bg-warning');
         info.textContent = 'Обработка...';
+        info.classList.add('bg-warning');
+
         try {
           const points = parseInput(inputArea.value);
           const rawLayers = splitLayers(points);
@@ -328,16 +502,26 @@ click 695 788
 
           const resultText = formatResult(layers);
           info.textContent = resultText + '\n\nРезультат скопирован в буфер обмена.';
+          info.classList.remove('bg-warning');
+          info.classList.add('bg-success');
 
           copyToClipboard(resultText).then(success => {
-            if (!success) {
+            if (success) {
+              showToast('Результат скопирован в буфер обмена');
+            } else {
               info.textContent += '\n(Не удалось скопировать автоматически, скопируйте вручную.)';
+              info.classList.remove('bg-success');
+              info.classList.add('bg-error');
+              showToast('Ошибка копирования в буфер обмена');
             }
           });
         } catch (err) {
           info.textContent = 'Ошибка: ' + err.message;
+          info.classList.remove('bg-warning', 'bg-success');
+          info.classList.add('bg-error');
           canvasesContainer.innerHTML = '';
           layers = [];
+          showToast('Ошибка: ' + err.message);
         }
       });
 
@@ -384,7 +568,7 @@ click 2241 1160
 click 2387 1160`;
     })();
 
-    // --- Код второй вкладки (multiclick) ---
+    // --- Вкладка 2: Преобразователь в команды ---
     (() => {
       const symbols = 'ЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮ ,?/';
       const clicks = [
@@ -394,10 +578,22 @@ click 2387 1160`;
         'click 1400 1154', 'click 2082 1165', 'click 2234 1165', 'click 2385 1165'
       ];
 
-      document.getElementById('multiBtn').onclick = function convertAndCopy() {
-        const input = document.getElementById('input').value;
+      const input = document.getElementById('input');
+      const output = document.getElementById('output');
+      const multiBtn = document.getElementById('multiBtn');
+
+      function copyText(text) {
+        return navigator.clipboard.writeText(text);
+      }
+
+      multiBtn.addEventListener('click', () => {
+        output.classList.remove('bg-error', 'bg-success', 'bg-warning');
+        output.textContent = 'Обработка...';
+        output.classList.add('bg-warning');
+
+        const val = input.value;
         let coords = [];
-        for (let char of input) {
+        for (let char of val) {
           let idx = symbols.indexOf(char.toUpperCase());
           if (idx !== -1) {
             const parts = clicks[idx].split(' ');
@@ -405,7 +601,10 @@ click 2387 1160`;
           }
         }
         if (coords.length === 0) {
-          document.getElementById('output').textContent = 'Ошибка: пустой или недопустимый ввод';
+          output.textContent = 'Ошибка: пустой или недопустимый ввод';
+          output.classList.remove('bg-warning', 'bg-success');
+          output.classList.add('bg-error');
+          showToast('Ошибка: пустой или недопустимый ввод');
           return;
         }
 
@@ -434,18 +633,32 @@ click 2387 1160`;
           }
         }
 
-        // Формируем итоговый вывод
         const result = groups.map(g => `multiclick ${g}`).join('\n');
+        output.textContent = result.trim();
+        output.classList.remove('bg-warning');
+        output.classList.add('bg-success');
 
-        document.getElementById('output').textContent = result.trim();
-
-        navigator.clipboard.writeText(result.trim()).then(() => {
-          alert('Скопировано в буфер обмена');
+        copyText(result.trim()).then(() => {
+          showToast('Результат скопирован в буфер обмена');
         }).catch(() => {
-          alert('Ошибка копирования в буфер обмена');
+          showToast('Ошибка копирования в буфер обмена');
+          output.classList.remove('bg-success');
+          output.classList.add('bg-error');
         });
-      };
+      });
     })();
+
+    // === Всплывающее уведомление ===
+    const toast = document.getElementById('toast');
+    let toastTimeout = null;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
   </script>
 </body>
 </html>
