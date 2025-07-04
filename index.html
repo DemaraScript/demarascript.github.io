@@ -16,6 +16,20 @@
       user-select: none;
       box-sizing: border-box;
     }
+    #pong-bg-canvas {
+      position: fixed;
+      z-index: 0;
+      left: 0; top: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      opacity: 0.19;
+      image-rendering: pixelated;
+    }
+    body > *:not(#pong-bg-canvas) {
+      position: relative;
+      z-index: 1;
+    }
     .tabs {
       display: flex;
       gap: 5px;
@@ -178,11 +192,11 @@
   </style>
 </head>
 <body>
+  <canvas id="pong-bg-canvas"></canvas>
   <div class="tabs">
     <button class="tab-btn active" data-tab="align">Клики</button>
     <button class="tab-btn" data-tab="multi">Команды</button>
   </div>
-
   <div class="tab-content active" id="tab-align">
     <h3>Стабилизировать клики по 4 слоям с Canvas (без текста в выводе)</h3>
     <textarea id="inputArea" rows="7"></textarea>
@@ -194,7 +208,6 @@
       Результат выравнивания появится здесь и автоматически скопируется в буфер обмена.
     </div>
   </div>
-
   <div class="tab-content" id="tab-multi">
     <h3>Введите сообщение:</h3>
     <textarea id="input" placeholder="Введите символы..."></textarea>
@@ -210,14 +223,90 @@
     <h4>Результат:</h4>
     <pre id="output"></pre>
   </div>
-
   <div class="author">@DemaraScript</div>
   <div id="toast"></div>
   <script>
-    // Глобальный чармап
-    let customClicks = null;
+    // Пинг-понг фон
+    (function(){
+      const canvas = document.getElementById('pong-bg-canvas');
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      let ctx = canvas.getContext('2d');
+      let w = () => canvas.width, h = () => canvas.height;
+      let ball = {x: w()/2, y: h()/2, vx: 5, vy: 3, r: 10};
+      let paddleH = 60, paddleW = 10, margin = 30;
+      let left = {y: h()/2-paddleH/2, vy: 0, score: 0};
+      let right = {y: h()/2-paddleH/2, vy: 0, score: 0};
+      let speed = 5;
+      function resetBall(dir=1) {
+        ball.x = w()/2;
+        ball.y = h()/2;
+        ball.vx = dir * (speed + Math.random()*2);
+        ball.vy = (Math.random()-0.5)*8;
+      }
+      function draw() {
+        ctx.clearRect(0,0,w(),h());
+        ctx.strokeStyle = "#00ff00";
+        ctx.setLineDash([6,6]);
+        ctx.beginPath();
+        ctx.moveTo(w()/2,0); ctx.lineTo(w()/2,h());
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(margin, left.y, paddleW, paddleH);
+        ctx.fillRect(w()-margin-paddleW, right.y, paddleW, paddleH);
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.r, 0, 2*Math.PI);
+        ctx.fillStyle = "#ffe600";
+        ctx.fill();
+        ctx.font = "bold 16px 'Press Start 2P', monospace";
+        ctx.fillStyle = "#00ff00";
+        ctx.fillText(left.score, w()/2-40, 30);
+        ctx.fillText(right.score, w()/2+20, 30);
+      }
+      function ai(paddle, targetY) {
+        let center = paddle.y + paddleH/2;
+        let d = targetY - center;
+        if (Math.abs(d) > 8) paddle.vy = Math.sign(d)*speed*0.85;
+        else paddle.vy = 0;
+        paddle.y += paddle.vy;
+        if (paddle.y < 0) paddle.y = 0;
+        if (paddle.y > h()-paddleH) paddle.y = h()-paddleH;
+      }
+      function update() {
+        ai(left, ball.y);
+        ai(right, ball.y);
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+        if (ball.y < ball.r || ball.y > h()-ball.r) ball.vy *= -1;
+        if (ball.x-ball.r < margin+10 &&
+            ball.y > left.y && ball.y < left.y+paddleH && ball.vx < 0) {
+          ball.vx *= -1.05;
+          ball.x = margin+10+ball.r;
+          ball.vy += left.vy*0.2 + (Math.random()-0.5)*2;
+        }
+        if (ball.x+ball.r > w()-margin-10 &&
+            ball.y > right.y && ball.y < right.y+paddleH && ball.vx > 0) {
+          ball.vx *= -1.05;
+          ball.x = w()-margin-10-ball.r;
+          ball.vy += right.vy*0.2 + (Math.random()-0.5)*2;
+        }
+        if (ball.x < 0) { right.score++; resetBall(1); }
+        if (ball.x > w()) { left.score++; resetBall(-1); }
+        speed = 5 + 0.07*(left.score + right.score);
+        draw();
+        requestAnimationFrame(update);
+      }
+      resetBall();
+      update();
+    })();
 
-    // Вкладки
+    // Основной код программы
+    let customClicks = null;
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -226,8 +315,6 @@
         document.getElementById('tab-' + this.dataset.tab).classList.add('active');
       });
     });
-
-    // Вкладка 1: Стабилизировать клики
     (() => {
       const inputArea = document.getElementById('inputArea');
       const processBtn = document.getElementById('processBtn');
@@ -235,11 +322,9 @@
       const canvasesContainer = document.getElementById('canvasesContainer');
       const info = document.getElementById('info');
       const closeBtn = info.querySelector('.close-btn');
-      const BASE_WIDTH = 320, BASE_HEIGHT = 60, BASE_POINT_SIZE = 8, LAYER_Y_THRESHOLD = 40;
+      const BASE_WIDTH = 320, BASE_HEIGHT = 120, BASE_POINT_SIZE = 8, LAYER_Y_THRESHOLD = 40;
       let layers = [];
       let lastResult = '';
-
-      // Пример для первой вкладки
       inputArea.value = `click 222 788
 click 457 788
 click 695 788
@@ -275,7 +360,6 @@ click 1402 1155
 click 2083 1177
 click 2241 1160
 click 2387 1160`;
-
       function parseInput(text) {
         const lines = text.trim().split('\n');
         const points = [];
@@ -333,38 +417,48 @@ click 2387 1160`;
         if (maxSrc === minSrc) return (minDst + maxDst) / 2;
         return minDst + (value - minSrc) * (maxDst - minDst) / (maxSrc - minSrc);
       }
-      function drawLayer(canvas, points, alignedPoints) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        ctx.clearRect(0, 0, width, height);
-        if (points.length === 0) return;
-        const minX = Math.min(...points.map(p => p.x));
-        const maxX = Math.max(...points.map(p => p.x));
-        const minY = Math.min(...points.map(p => p.y));
-        const maxY = Math.max(...points.map(p => p.y));
+      function updateVisualization() {
+        canvasesContainer.innerHTML = '';
+        if (!layers.length) return;
+        const allPoints = layers.flatMap(l => l.points.concat(l.aligned));
+        const minX = Math.min(...allPoints.map(p => p.x));
+        const maxX = Math.max(...allPoints.map(p => p.x));
+        const minY = Math.min(...allPoints.map(p => p.y));
+        const maxY = Math.max(...allPoints.map(p => p.y));
+        const width = BASE_WIDTH, height = BASE_HEIGHT;
         const pointSize = BASE_POINT_SIZE;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        canvasesContainer.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = '#00ff00';
-        points.forEach(p => {
-          const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
-          const y = scale(p.y, minY, maxY, height - pointSize / 2, pointSize / 2);
-          ctx.beginPath();
-          ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.strokeStyle = '#00ff00';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        layers.forEach(layer => {
+          layer.points.forEach(p => {
+            const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
+            const y = scale(p.y, minY, maxY, pointSize / 2, height - pointSize / 2);
+            ctx.beginPath();
+            ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+          });
         });
         ctx.fillStyle = '#ffe600';
-        alignedPoints.forEach(p => {
-          const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
-          const y = scale(p.y, minY, maxY, height - pointSize / 2, pointSize / 2);
-          ctx.beginPath();
-          ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.strokeStyle = '#ffe600';
-          ctx.lineWidth = 2;
-          ctx.stroke();
+        ctx.strokeStyle = '#ffe600';
+        layers.forEach(layer => {
+          layer.aligned.forEach(p => {
+            const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
+            const y = scale(p.y, minY, maxY, pointSize / 2, height - pointSize / 2);
+            ctx.beginPath();
+            ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+          });
         });
       }
       function formatResult(layers) {
@@ -375,22 +469,6 @@ click 2387 1160`;
           });
         });
         return result.trim();
-      }
-      function createCanvas(width, height) {
-        const c = document.createElement('canvas');
-        c.width = width;
-        c.height = height;
-        c.style.width = width + 'px';
-        c.style.height = height + 'px';
-        return c;
-      }
-      function updateVisualization() {
-        canvasesContainer.innerHTML = '';
-        layers.forEach(layer => {
-          const canvas = createCanvas(BASE_WIDTH, BASE_HEIGHT);
-          canvasesContainer.appendChild(canvas);
-          drawLayer(canvas, layer.points, layer.aligned);
-        });
       }
       async function copyToClipboard(text) {
         try {
@@ -442,14 +520,11 @@ click 2387 1160`;
           showToast('Ошибка: ' + err.message);
         }
       });
-
-      // Кнопка "Применить как чармап"
       toCharmapBtn.addEventListener('click', () => {
         if (!lastResult) {
           showToast('Сначала обработайте клики!');
           return;
         }
-        // Парсим результат в массив чармапа
         const lines = lastResult.trim().split('\n').filter(x => /^click\s+\d+\s+\d+$/i.test(x));
         if (lines.length === 0) {
           showToast('Нет кликов для чармапа!');
@@ -457,15 +532,12 @@ click 2387 1160`;
         }
         customClicks = lines;
         showToast('Чармап применён!');
-        // Переключаемся на вкладку "Команды"
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
         document.querySelector('.tab-btn[data-tab="multi"]').classList.add('active');
         document.getElementById('tab-multi').classList.add('active');
       });
     })();
-
-    // Вкладка 2: Преобразователь в команды
     (() => {
       const symbols = 'ЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮ ,?/';
       const defaultClicks = [
@@ -478,7 +550,6 @@ click 2387 1160`;
       const output = document.getElementById('output');
       const multiBtn = document.getElementById('multiBtn');
       const patternInput = document.getElementById('patternInput');
-
       function parsePattern(pattern) {
         let res = [], i = 0;
         while (i < pattern.length) {
@@ -497,13 +568,11 @@ click 2387 1160`;
         }
         return res;
       }
-
       multiBtn.addEventListener('click', () => {
         output.textContent = '';
         const val = input.value;
         let coords = [];
         const lines = val.trim().split('\n');
-        // Используем кастомный чармап, если он задан и длина совпадает с алфавитом
         const clicks = (window.customClicks && window.customClicks.length === symbols.length) ? window.customClicks : defaultClicks;
         for (let line of lines) {
           let m = line.trim().match(/^click\s+(\d+)\s+(\d+)$/i);
@@ -555,8 +624,6 @@ click 2387 1160`;
         showToast('Результат скопирован в буфер обмена');
       });
     })();
-
-    // Всплывающее уведомление
     const toast = document.getElementById('toast');
     let toastTimeout = null;
     function showToast(message) {
