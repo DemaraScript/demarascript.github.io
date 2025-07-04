@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>PTP Acid Utilities</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+    body {
+      font-family: 'VT323', monospace;
+      background: #101010;
+      color: #ffe600;
+      max-width: 420px;
+      margin: 10px auto 0 auto;
+      padding: 10px 2px 0 2px;
+      font-size: 16px;
+      user-select: none;
+      box-sizing: border-box;
+    }
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+      justify-content: center;
+    }
+    .tab-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      padding: 7px 6px 5px 6px;
+      cursor: pointer;
+      border: 2px solid #00ff00;
+      background: #101010;
+      color: #00ff00;
+      border-radius: 5px 5px 0 0;
+      transition: background .3s, color .3s;
+      flex: 1 1 0;
+      text-align: center;
+      min-width: 70px;
+      user-select: none;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+    }
+    .tab-btn.active { background: #181818; color: #00ff00; border-bottom: 2px solid #181818; }
+    .tab-content {
+      display: none;
+      border: 2px solid #00ff00;
+      border-radius: 0 5px 5px 5px;
+      background: #181818;
+      padding: 12px 7px 10px 7px;
+      min-height: 200px;
+      color: #ffe600;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    .tab-content.active { display: block; }
+    textarea, input[type="text"] {
+      font-family: 'VT323', monospace;
+      font-size: 13px;
+      background: #101010;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      border-radius: 5px;
+      padding: 7px;
+      margin-bottom: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color .3s;
+      outline: none;
+      user-select: text;
+    }
+    textarea:focus, input[type="text"]:focus {
+      border-color: #ffe600;
+      background: #181818;
+      color: #00ff00;
+    }
+    button, .btn-charmap {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      background: #101010;
+      color: #ffe600;
+      border: 2px solid #ffe600;
+      border-radius: 5px;
+      padding: 7px 4px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      width: 100%;
+      user-select: none;
+      transition: background .3s, color .3s, border-color .3s;
+      letter-spacing: 0.5px;
+      display: block;
+    }
+    button:hover, .btn-charmap:hover {
+      background: #ffe600;
+      color: #101010;
+      border-color: #00ff00;
+    }
+    .btn-charmap {
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      background: #101010;
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .btn-charmap:hover {
+      background: #00ff00;
+      color: #101010;
+      border-color: #ffe600;
+    }
+    #patternControl label {
+      color: #00ff00;
+      font-size: 12px;
+      user-select: none;
+      display: block;
+      margin-bottom: 4px;
+    }
+    #output {
+      background: #101010;
+      color: #ffe600;
+      border: 2px solid #00ff00;
+      border-radius: 5px;
+      padding: 7px;
+      min-height: 60px;
+      margin-top: 7px;
+      font-family: 'VT323', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      user-select: text;
+    }
+    .hint {
+      color: #00ff00;
+      font-size: 11px;
+      margin-bottom: 7px;
+      font-style: italic;
+      user-select: none;
+    }
+    h3, h4 {
+      font-family: 'Press Start 2P', monospace;
+      color: #00ff00;
+      margin-top: 0;
+      margin-bottom: 7px;
+      font-size: 13px;
+      user-select: none;
+    }
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #101010;
+      color: #ffe600;
+      padding: 8px 14px;
+      border-radius: 16px;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s ease;
+      z-index: 9999;
+      user-select: none;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border: 2px solid #00ff00;
+      max-width: 90%;
+      text-align: center;
+    }
+    #toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .author {
+      font-family: 'Press Start 2P', monospace;
+      color: #00ff00;
+      font-size: 10px;
+      text-align: center;
+      margin: 14px 0 4px 0;
+      letter-spacing: 1px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="align">Клики</button>
+    <button class="tab-btn" data-tab="multi">Команды</button>
+  </div>
+
+  <div class="tab-content active" id="tab-align">
+    <h3>Стабилизировать клики по 4 слоям с Canvas (без текста в выводе)</h3>
+    <textarea id="inputArea" rows="7"></textarea>
+    <button id="processBtn">Обработать и показать</button>
+    <button class="btn-charmap" id="toCharmapBtn">Применить как чармап для команд</button>
+    <div id="canvasesContainer"></div>
+    <div id="info" style="display:none;">
+      <span class="close-btn" title="Скрыть/показать результат" style="position:absolute;top:6px;right:8px;cursor:pointer;color:#00ff00;font-weight:bold;font-size:18px;">×</span>
+      Результат выравнивания появится здесь и автоматически скопируется в буфер обмена.
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-multi">
+    <h3>Введите сообщение:</h3>
+    <textarea id="input" placeholder="Введите символы..."></textarea>
+    <div id="patternControl">
+      <label for="patternInput">Паттерн групп (например, 332, 2d2032):</label>
+      <input type="text" id="patternInput" maxlength="20" value="332" />
+    </div>
+    <button id="multiBtn">Преобразовать и скопировать</button>
+    <div class="hint">
+      Поддерживаемые символы: ЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮ ,?/ <br>
+      Паттерн: цифры — multiclick, dXX — задержка (delay XX, только две цифры после d)
+    </div>
+    <h4>Результат:</h4>
+    <pre id="output"></pre>
+  </div>
+
+  <div class="author">@DemaraScript</div>
+  <div id="toast"></div>
+  <script>
+    // Глобальный чармап
+    let customClicks = null;
+
+    // Вкладки
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Вкладка 1: Стабилизировать клики
+    (() => {
+      const inputArea = document.getElementById('inputArea');
+      const processBtn = document.getElementById('processBtn');
+      const toCharmapBtn = document.getElementById('toCharmapBtn');
+      const canvasesContainer = document.getElementById('canvasesContainer');
+      const info = document.getElementById('info');
+      const closeBtn = info.querySelector('.close-btn');
+      const BASE_WIDTH = 320, BASE_HEIGHT = 60, BASE_POINT_SIZE = 8, LAYER_Y_THRESHOLD = 40;
+      let layers = [];
+      let lastResult = '';
+
+      // Пример для первой вкладки
+      inputArea.value = `click 222 788
+click 457 788
+click 695 788
+click 931 788
+click 1167 788
+click 1404 788
+click 1640 788
+click 1876 788
+click 2111 788
+click 2349 788
+click 2585 788
+click 228 909
+click 458 909
+click 701 904
+click 929 909
+click 1175 914
+click 1406 910
+click 1642 903
+click 1883 912
+click 2114 907
+click 2356 908
+click 2580 905
+click 464 1021
+click 708 1028
+click 937 1036
+click 1172 1027
+click 1402 1033
+click 1643 1024
+click 1872 1033
+click 2115 1026
+click 2352 1032
+click 1402 1155
+click 2083 1177
+click 2241 1160
+click 2387 1160`;
+
+      function parseInput(text) {
+        const lines = text.trim().split('\n');
+        const points = [];
+        for (const line of lines) {
+          const m = line.trim().match(/^click\s+(\d+)\s+(\d+)$/i);
+          if (!m) throw new Error(`Неверный формат строки: "${line}". Формат: click X Y`);
+          points.push({ x: +m[1], y: +m[2] });
+        }
+        if (points.length < 2) throw new Error('Нужно минимум 2 клика.');
+        return points;
+      }
+      function splitLayers(points) {
+        const sorted = points.slice().sort((a, b) => a.y - b.y);
+        const layers = [];
+        let currentLayer = [sorted[0]];
+        for (let i = 1; i < sorted.length; i++) {
+          if (Math.abs(sorted[i].y - sorted[i - 1].y) > LAYER_Y_THRESHOLD) {
+            layers.push(currentLayer);
+            currentLayer = [];
+          }
+          currentLayer.push(sorted[i]);
+        }
+        layers.push(currentLayer);
+        return layers;
+      }
+      function alignPointsWithException(points, excludeFirstCount = 0) {
+        if (excludeFirstCount === 0) {
+          const n = points.length;
+          const minX = Math.min(...points.map(p => p.x));
+          const maxX = Math.max(...points.map(p => p.x));
+          const avgY = points.reduce((sum, p) => sum + p.y, 0) / n;
+          const stepX = (maxX - minX) / (n - 1);
+          const aligned = [];
+          for (let i = 0; i < n; i++) {
+            aligned.push({ x: minX + i * stepX, y: avgY });
+          }
+          return aligned;
+        } else {
+          const n = points.length;
+          if (excludeFirstCount >= n) throw new Error('excludeFirstCount больше или равен числу точек');
+          const excluded = points.slice(0, excludeFirstCount);
+          const toAlign = points.slice(excludeFirstCount);
+          const minX = Math.min(...toAlign.map(p => p.x));
+          const maxX = Math.max(...toAlign.map(p => p.x));
+          const avgY = toAlign.reduce((sum, p) => sum + p.y, 0) / toAlign.length;
+          const stepX = (maxX - minX) / (toAlign.length - 1);
+          const aligned = [];
+          for (let i = 0; i < toAlign.length; i++) {
+            aligned.push({ x: minX + i * stepX, y: avgY });
+          }
+          return excluded.concat(aligned);
+        }
+      }
+      function scale(value, minSrc, maxSrc, minDst, maxDst) {
+        if (maxSrc === minSrc) return (minDst + maxDst) / 2;
+        return minDst + (value - minSrc) * (maxDst - minDst) / (maxSrc - minSrc);
+      }
+      function drawLayer(canvas, points, alignedPoints) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        ctx.clearRect(0, 0, width, height);
+        if (points.length === 0) return;
+        const minX = Math.min(...points.map(p => p.x));
+        const maxX = Math.max(...points.map(p => p.x));
+        const minY = Math.min(...points.map(p => p.y));
+        const maxY = Math.max(...points.map(p => p.y));
+        const pointSize = BASE_POINT_SIZE;
+        ctx.fillStyle = '#00ff00';
+        points.forEach(p => {
+          const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
+          const y = scale(p.y, minY, maxY, height - pointSize / 2, pointSize / 2);
+          ctx.beginPath();
+          ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = '#00ff00';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#ffe600';
+        alignedPoints.forEach(p => {
+          const x = scale(p.x, minX, maxX, pointSize / 2, width - pointSize / 2);
+          const y = scale(p.y, minY, maxY, height - pointSize / 2, pointSize / 2);
+          ctx.beginPath();
+          ctx.arc(x, y, pointSize / 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = '#ffe600';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+      }
+      function formatResult(layers) {
+        let result = '';
+        layers.forEach(layer => {
+          layer.aligned.forEach(p => {
+            result += `click ${Math.round(p.x)} ${Math.round(p.y)}\n`;
+          });
+        });
+        return result.trim();
+      }
+      function createCanvas(width, height) {
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        c.style.width = width + 'px';
+        c.style.height = height + 'px';
+        return c;
+      }
+      function updateVisualization() {
+        canvasesContainer.innerHTML = '';
+        layers.forEach(layer => {
+          const canvas = createCanvas(BASE_WIDTH, BASE_HEIGHT);
+          canvasesContainer.appendChild(canvas);
+          drawLayer(canvas, layer.points, layer.aligned);
+        });
+      }
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      closeBtn.addEventListener('click', () => {
+        info.style.display = info.style.display === 'none' ? 'block' : 'none';
+      });
+      function setInfoStatus(statusClass, message) {
+        info.textContent = message;
+        info.classList.remove('bg-success', 'bg-error', 'bg-warning');
+        info.style.animation = 'none';
+        void info.offsetHeight;
+        info.classList.add(statusClass);
+      }
+      processBtn.addEventListener('click', () => {
+        info.style.display = 'block';
+        setInfoStatus('bg-warning', 'Обработка...');
+        try {
+          const points = parseInput(inputArea.value);
+          const rawLayers = splitLayers(points);
+          layers = rawLayers.map((pointsLayer, idx) => {
+            if (idx === 3) {
+              return { points: pointsLayer, aligned: alignPointsWithException(pointsLayer, 1) };
+            } else {
+              return { points: pointsLayer, aligned: alignPointsWithException(pointsLayer, 0) };
+            }
+          });
+          updateVisualization();
+          const resultText = formatResult(layers);
+          lastResult = resultText;
+          setInfoStatus('bg-success', resultText + '\n\nРезультат скопирован в буфер обмена.');
+          copyToClipboard(resultText).then(success => {
+            if (!success) {
+              setInfoStatus('bg-error', resultText + '\n\nНе удалось скопировать автоматически, скопируйте вручную.');
+              showToast('Ошибка копирования в буфер обмена');
+            } else {
+              showToast('Результат скопирован в буфер обмена');
+            }
+          });
+        } catch (err) {
+          setInfoStatus('bg-error', 'Ошибка: ' + err.message);
+          canvasesContainer.innerHTML = '';
+          layers = [];
+          showToast('Ошибка: ' + err.message);
+        }
+      });
+
+      // Кнопка "Применить как чармап"
+      toCharmapBtn.addEventListener('click', () => {
+        if (!lastResult) {
+          showToast('Сначала обработайте клики!');
+          return;
+        }
+        // Парсим результат в массив чармапа
+        const lines = lastResult.trim().split('\n').filter(x => /^click\s+\d+\s+\d+$/i.test(x));
+        if (lines.length === 0) {
+          showToast('Нет кликов для чармапа!');
+          return;
+        }
+        customClicks = lines;
+        showToast('Чармап применён!');
+        // Переключаемся на вкладку "Команды"
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.querySelector('.tab-btn[data-tab="multi"]').classList.add('active');
+        document.getElementById('tab-multi').classList.add('active');
+      });
+    })();
+
+    // Вкладка 2: Преобразователь в команды
+    (() => {
+      const symbols = 'ЙЦУКЕНГШЩЗХФЫВАПРОЛДЖЭЯЧСМИТЬБЮ ,?/';
+      const defaultClicks = [
+        'click 220 787', 'click 457 787', 'click 693 787', 'click 929 787', 'click 1164 787', 'click 1402 787', 'click 1638 787', 'click 1873 787', 'click 2111 787', 'click 2347 787', 'click 2583 787',
+        'click 226 907', 'click 462 907', 'click 695 907', 'click 933 907', 'click 1167 907', 'click 1402 907', 'click 1638 907', 'click 1873 907', 'click 2109 907', 'click 2342 907', 'click 2578 907',
+        'click 462 1028', 'click 698 1028', 'click 935 1028', 'click 1171 1028', 'click 1407 1028', 'click 1642 1028', 'click 1878 1028', 'click 2114 1028', 'click 2351 1028',
+        'click 1400 1154', 'click 2082 1165', 'click 2234 1165', 'click 2385 1165'
+      ];
+      const input = document.getElementById('input');
+      const output = document.getElementById('output');
+      const multiBtn = document.getElementById('multiBtn');
+      const patternInput = document.getElementById('patternInput');
+
+      function parsePattern(pattern) {
+        let res = [], i = 0;
+        while (i < pattern.length) {
+          if (pattern[i] === 'd') {
+            let num = '';
+            i++;
+            if (i < pattern.length && /\d/.test(pattern[i])) num += pattern[i++];
+            if (i < pattern.length && /\d/.test(pattern[i])) num += pattern[i++];
+            if (num.length === 2) res.push({ type: 'delay', n: parseInt(num) });
+          } else if (/\d/.test(pattern[i])) {
+            res.push({ type: 'group', n: parseInt(pattern[i]) });
+            i++;
+          } else {
+            i++;
+          }
+        }
+        return res;
+      }
+
+      multiBtn.addEventListener('click', () => {
+        output.textContent = '';
+        const val = input.value;
+        let coords = [];
+        const lines = val.trim().split('\n');
+        // Используем кастомный чармап, если он задан и длина совпадает с алфавитом
+        const clicks = (window.customClicks && window.customClicks.length === symbols.length) ? window.customClicks : defaultClicks;
+        for (let line of lines) {
+          let m = line.trim().match(/^click\s+(\d+)\s+(\d+)$/i);
+          if (m) {
+            coords.push(m[1], m[2]);
+          } else {
+            for (let char of line) {
+              let idx = symbols.indexOf(char.toUpperCase());
+              if (idx !== -1 && clicks[idx]) {
+                const parts = clicks[idx].split(' ');
+                coords.push(parts[1], parts[2]);
+              }
+            }
+          }
+        }
+        if (coords.length === 0) {
+          output.textContent = 'Ошибка: пустой или недопустимый ввод';
+          showToast('Ошибка: пустой или недопустимый ввод');
+          return;
+        }
+        let patternStr = patternInput.value.trim();
+        if (!patternStr.length) {
+          output.textContent = 'Ошибка: пустой паттерн';
+          showToast('Ошибка: пустой паттерн');
+          return;
+        }
+        let pattern = parsePattern(patternStr);
+        if (!pattern.length) {
+          output.textContent = 'Ошибка: неверный паттерн';
+          showToast('Ошибка: неверный паттерн');
+          return;
+        }
+        let i = 0, res = [], pIndex = 0;
+        while (i < coords.length) {
+          if (pIndex >= pattern.length) pIndex = 0;
+          let p = pattern[pIndex];
+          if (p.type === 'group') {
+            let count = p.n * 2;
+            let chunk = coords.slice(i, i + count).join(' ');
+            if (chunk.length) res.push(`multiclick ${chunk}`);
+            i += count;
+          } else if (p.type === 'delay') {
+            res.push(`delay ${p.n}`);
+          }
+          pIndex++;
+        }
+        output.textContent = res.join('\n');
+        navigator.clipboard.writeText(output.textContent);
+        showToast('Результат скопирован в буфер обмена');
+      });
+    })();
+
+    // Всплывающее уведомление
+    const toast = document.getElementById('toast');
+    let toastTimeout = null;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
