@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Генератор случайных данных</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f0f0f0;
+    }
+    #result {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+      user-select: all;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      width: fit-content;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    button {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    #copyMessage {
+      margin-top: 0.5rem;
+      color: green;
+      font-weight: bold;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <h1>Генератор случайных данных</h1>
+  <button id="generateBtn">Сгенерировать и скопировать</button>
+  <div id="result"></div>
+  <div id="copyMessage">Скопировано в буфер!</div>
+
+  <script>
+    const generateBtn = document.getElementById('generateBtn');
+    const resultDiv = document.getElementById('result');
+    const copyMessage = document.getElementById('copyMessage');
+
+    function getRandomChar(chars) {
+      return chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    function generateRandomString(length, chars) {
+      let str = '';
+      for (let i = 0; i < length; i++) {
+        str += getRandomChar(chars);
+      }
+      return str;
+    }
+
+    function generateData() {
+      const charsXY = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const charsH = '0123456789';
+
+      const partX = generateRandomString(8, charsXY);
+      const partY = generateRandomString(7, charsXY);
+      const partH = generateRandomString(4, charsH);
+
+      return `${partX}@gmail.com:${partY}${partH}`;
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        copyMessage.style.visibility = 'visible';
+        setTimeout(() => {
+          copyMessage.style.visibility = 'hidden';
+        }, 2000);
+      } catch (err) {
+        alert('Ошибка копирования в буфер: ' + err);
+      }
+    }
+
+    generateBtn.addEventListener('click', () => {
+      const data = generateData();
+      resultDiv.textContent = data;
+      copyToClipboard(data);
+    });
+  </script>
+</body>
+</html>
