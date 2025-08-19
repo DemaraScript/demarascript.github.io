@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Генератор случайных данных</title>
+  <title>Генератор «очеловеченных» данных</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,6 +18,7 @@
       border-radius: 5px;
       width: fit-content;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      white-space: nowrap;
     }
     button {
       font-size: 1rem;
@@ -33,7 +34,80 @@
   </style>
 </head>
 <body>
-  <h1>Генератор случайных данных</h1>
+  <h1>Генератор «очеловеченных» данных</h1>
+  <button id="generateBtn">Сгенерировать и скопировать</button>
+  <div id="result"></div>
+  <div id="copyMessage">Скопировано в буфер!</div>
+
+<script>
+  const generateBtn = document.getElementById('generateBtn');
+  const resultDiv = document.getElementById('result');
+  const copyMessage = document.getElementById('copyMessage');
+
+  // 100 имён (латиницей, для email)
+  const firstNames = [
+    "alexander", "andrey", "anatoly", "anton", "artem", "boris", "daniil", "dmitry", "egor", "evgeny",
+    "fedor", "gennady", "grigory", "igor", "ilya", "innokentiy", "konstantin", "kostya", "lev", "maksim",
+    "mikhail", "nikita", "nikolay", "oleg", "pavel", "roman", "ruslan", "sergey", "stanislav", "stepan",
+    "vasiliy", "viktor", "vladimir", "volodya", "vsevolod", "yaroslav", "yegor", "yury", "zahar", "ivan",
+    "mariya", "anna", "elena", "olga", "tatiana", "svetlana", "natalia", "ekaterina", "marina", "alina",
+    "aleksandra", "anastasia", "daria", "ekaterina", "eva", "galina", "ira", "katerina", "ksenia", "lidia",
+    "lyudmila", "marfa", "nina", "oksana", "polina", "raniya", "sofiya", "tamara", "valentina", "vera",
+    "victoria", "yasmina", "yonna", "zoya", "zulfiya", "anabel", "alda", "alida", "alika", "alina",
+    "amira", "anika", "anissa", "arina", "bella", "dina", "dusha", "eliza", "faina", "flora"
+  ];
+
+  // 100 фамилий (латиницей)
+  const lastNames = [
+    "ivanov", "petrov", "sidorov", "smirnov", "volkov", "morozov", "fedotov", "mikhailov", "nikolaev", "fedorov",
+    "vitaliev", "gavrilov", "gorbatov", "denisov", "kuznetsov", "voloshin", "korolev", "grigorev", "vasiliev", "soloviev",
+    "karlov", "bogdanov", "yakovlev", "sergeev", "stepanov", "romanov", "borodin", "zaitsev", "zaharov", "kostin",
+    "belozerov", "chekhov", "chernov", "dubrovin", "egorov", "kazakov", "kalashnikov", "leshchenko", "moroz", "nikitin",
+    "pavlov", "ryabov", "sinyakov", "tarasov", "ushakov", "fedoseev", "chernyshev", "shirokov", "sysoev", "tikhonov",
+    "ushakov", "fomin", "vasilev", "zvonarev", "keller", "korzun", "kupreev", "leshchenko", "makarov", "merzlyakov",
+    "nikiforov", "osenin", "pankratov", "puscov", "rodionov", "samarin", "solntsev", "tarasov", "tyurin", "ushakov",
+    "frolov", "cheremisin", "voloshin", "zelenin", "leshchenko", "makeyev", "nikonov", "osenin", "pavlishin", "petrov",
+    "ryabov", "stepanov", "ushakov", "chernov", "egorov", "fedoseev", "gavrilov", "ivanov", "kuznetsov", "morozov",
+    "nikolayev", "sergeev", "tarasov", "volkov", "yakovlev", "zaharov", "kostin", "borodin", "denisov", "vitaliev"
+  ];
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generateEmail() {
+    const firstName = firstNames[getRandomInt(0, firstNames.length - 1)];
+    const lastName = lastNames[getRandomInt(0, lastNames.length - 1)];
+    const number = getRandomInt(1, 99);
+    return `${firstName}${lastName}${number}@gmail.com`;
+  }
+
+  function generateData() {
+    const email = generateEmail();
+    const password = "IvanKirilov49";
+    return `${email}:${password}`;
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      copyMessage.style.visibility = "visible";
+      setTimeout(() => {
+        copyMessage.style.visibility = "hidden";
+      }, 2000);
+    } catch (err) {
+      alert("Ошибка копирования в буфер: " + err);
+    }
+  }
+
+  generateBtn.addEventListener("click", () => {
+    const data = generateData();
+    resultDiv.textContent = data;
+    copyToClipboard(data);
+  });
+</script>
+</body>
+</html>
   <button id="generateBtn">Сгенерировать и скопировать</button>
   <div id="result"></div>
   <div id="copyMessage">Скопировано в буфер!</div>
