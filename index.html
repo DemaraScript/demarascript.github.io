@@ -1,161 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Генератор «очеловеченных» данных</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>😈</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: #f0f0f0;
+    html,body { margin:0; height:100%; }
+    body { background:#fff; display:grid; place-items:center; }
+
+    #startScreen { background:#fff; width:100%; height:100%; display:grid; place-items:center; }
+    #startBtn {
+      font-size:2rem; padding:1rem 2rem;
+      border:2px solid #000; background:#fff; cursor:pointer;
     }
-    #result {
-      font-size: 1.5rem;
-      margin-top: 1rem;
-      user-select: all;
-      background: #fff;
-      padding: 1rem;
-      border-radius: 5px;
-      width: fit-content;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      white-space: nowrap;
+
+    /* Скример */
+    #scare { position:fixed; inset:0; display:none; place-items:center; background:#000; z-index:9999; }
+    #scare img { width:100vw; height:100vh; object-fit:cover; }
+    .flash { animation:flash 120ms infinite alternate; }
+    .shake { animation:shake .08s infinite; }
+    .cursor-none { cursor:none; }
+
+    @keyframes flash {
+      from{filter:brightness(1)}
+      to{filter:brightness(1.3) contrast(1.2)}
     }
-    button {
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
-    #copyMessage {
-      margin-top: 0.5rem;
-      color: green;
-      font-weight: bold;
-      visibility: hidden;
+    @keyframes shake {
+      0%{transform:translate(0,0) rotate(0)}
+      25%{transform:translate(6px,-6px) rotate(.3deg)}
+      50%{transform:translate(-7px,7px) rotate(-.4deg)}
+      75%{transform:translate(8px,-5px) rotate(.2deg)}
+      100%{transform:translate(0,0) rotate(0)}
     }
   </style>
 </head>
 <body>
-  <h1>Генератор «очеловеченных» данных</h1>
-  <button id="generateBtn">Сгенерировать и скопировать</button>
-  <div id="result"></div>
-  <div id="copyMessage">Скопировано в буфер!</div>
+  <!-- Стартовый экран -->
+  <div id="startScreen">
+    <button id="startBtn">МАЙНИТ</button>
+  </div>
 
-<script>
-  const generateBtn = document.getElementById('generateBtn');
-  const resultDiv = document.getElementById('result');
-  const copyMessage = document.getElementById('copyMessage');
-
-  // 100 имён (латиницей, для email)
-  const firstNames = [
-    "alexander", "andrey", "anatoly", "anton", "artem", "boris", "daniil", "dmitry", "egor", "evgeny",
-    "fedor", "gennady", "grigory", "igor", "ilya", "innokentiy", "konstantin", "kostya", "lev", "maksim",
-    "mikhail", "nikita", "nikolay", "oleg", "pavel", "roman", "ruslan", "sergey", "stanislav", "stepan",
-    "vasiliy", "viktor", "vladimir", "volodya", "vsevolod", "yaroslav", "yegor", "yury", "zahar", "ivan",
-    "mariya", "anna", "elena", "olga", "tatiana", "svetlana", "natalia", "ekaterina", "marina", "alina",
-    "aleksandra", "anastasia", "daria", "ekaterina", "eva", "galina", "ira", "katerina", "ksenia", "lidia",
-    "lyudmila", "marfa", "nina", "oksana", "polina", "raniya", "sofiya", "tamara", "valentina", "vera",
-    "victoria", "yasmina", "yonna", "zoya", "zulfiya", "anabel", "alda", "alida", "alika", "alina",
-    "amira", "anika", "anissa", "arina", "bella", "dina", "dusha", "eliza", "faina", "flora"
-  ];
-
-  // 100 фамилий (латиницей)
-  const lastNames = [
-    "ivanov", "petrov", "sidorov", "smirnov", "volkov", "morozov", "fedotov", "mikhailov", "nikolaev", "fedorov",
-    "vitaliev", "gavrilov", "gorbatov", "denisov", "kuznetsov", "voloshin", "korolev", "grigorev", "vasiliev", "soloviev",
-    "karlov", "bogdanov", "yakovlev", "sergeev", "stepanov", "romanov", "borodin", "zaitsev", "zaharov", "kostin",
-    "belozerov", "chekhov", "chernov", "dubrovin", "egorov", "kazakov", "kalashnikov", "leshchenko", "moroz", "nikitin",
-    "pavlov", "ryabov", "sinyakov", "tarasov", "ushakov", "fedoseev", "chernyshev", "shirokov", "sysoev", "tikhonov",
-    "ushakov", "fomin", "vasilev", "zvonarev", "keller", "korzun", "kupreev", "leshchenko", "makarov", "merzlyakov",
-    "nikiforov", "osenin", "pankratov", "puscov", "rodionov", "samarin", "solntsev", "tarasov", "tyurin", "ushakov",
-    "frolov", "cheremisin", "voloshin", "zelenin", "leshchenko", "makeyev", "nikonov", "osenin", "pavlishin", "petrov",
-    "ryabov", "stepanov", "ushakov", "chernov", "egorov", "fedoseev", "gavrilov", "ivanov", "kuznetsov", "morozov",
-    "nikolayev", "sergeev", "tarasov", "volkov", "yakovlev", "zaharov", "kostin", "borodin", "denisov", "vitaliev"
-  ];
-
-  function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function generateEmail() {
-    const firstName = firstNames[getRandomInt(0, firstNames.length - 1)];
-    const lastName = lastNames[getRandomInt(0, lastNames.length - 1)];
-    const number = getRandomInt(1, 99);
-    return `${firstName}${lastName}${number}@gmail.com`;
-  }
-
-  function generateData() {
-    const email = generateEmail();
-    const password = "IvanKirilov49";
-    return `${email}:${password}`;
-  }
-
-  async function copyToClipboard(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      copyMessage.style.visibility = "visible";
-      setTimeout(() => {
-        copyMessage.style.visibility = "hidden";
-      }, 2000);
-    } catch (err) {
-      alert("Ошибка копирования в буфер: " + err);
-    }
-  }
-
-  generateBtn.addEventListener("click", () => {
-    const data = generateData();
-    resultDiv.textContent = data;
-    copyToClipboard(data);
-  });
-</script>
-</body>
-</html>
-  <button id="generateBtn">Сгенерировать и скопировать</button>
-  <div id="result"></div>
-  <div id="copyMessage">Скопировано в буфер!</div>
+  <!-- Скример -->
+  <div id="scare" class="flash shake cursor-none">
+    <img src="screamer.jpg" alt="">
+    <audio id="snd" src="scream.mp3" preload="auto"></audio>
+  </div>
 
   <script>
-    const generateBtn = document.getElementById('generateBtn');
-    const resultDiv = document.getElementById('result');
-    const copyMessage = document.getElementById('copyMessage');
+    const startBtn = document.getElementById('startBtn');
+    const startScreen = document.getElementById('startScreen');
+    const scare = document.getElementById('scare');
+    const snd = document.getElementById('snd');
 
-    function getRandomChar(chars) {
-      return chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
-    function generateRandomString(length, chars) {
-      let str = '';
-      for (let i = 0; i < length; i++) {
-        str += getRandomChar(chars);
-      }
-      return str;
-    }
-
-    function generateData() {
-      const charsXY = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      const charsH = '0123456789';
-
-      const partX = generateRandomString(8, charsXY);
-      const partY = generateRandomString(7, charsXY);
-      const partH = generateRandomString(4, charsH);
-
-      return `${partX}@gmail.com:${partY}${partH}`;
-    }
-
-    async function copyToClipboard(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        copyMessage.style.visibility = 'visible';
-        setTimeout(() => {
-          copyMessage.style.visibility = 'hidden';
-        }, 2000);
-      } catch (err) {
-        alert('Ошибка копирования в буфер: ' + err);
-      }
-    }
-
-    generateBtn.addEventListener('click', () => {
-      const data = generateData();
-      resultDiv.textContent = data;
-      copyToClipboard(data);
+    startBtn.addEventListener('click', () => {
+      // убрать стартовый экран
+      startScreen.remove();
+      // показать скример
+      scare.style.display = 'grid';
+      document.body.classList.add('cursor-none');
+      // звук
+      snd.volume = 1.0;
+      snd.play().catch(()=>{});
+      // без возможности остановки
     });
   </script>
 </body>
