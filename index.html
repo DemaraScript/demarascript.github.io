@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DemaraScript by @EvTgMods</title>
+    <title>DemaraScript</title>
     <style>
         * {
             box-sizing: border-box;
@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
             background: #313244;
             border-radius: 10px;
@@ -52,11 +52,11 @@
         }
         
         .tab-button {
-            padding: 15px 25px;
+            padding: 15px 20px;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #cdd6f4;
             transition: all 0.3s ease;
@@ -135,6 +135,7 @@
             background: #45475a;
             border-radius: 5px;
             border-left: 4px solid #89b4fa;
+            word-break: break-all;
         }
         
         .hidden {
@@ -190,10 +191,45 @@
             to { transform: rotate(360deg); }
         }
         
+        .generator-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .generator-controls .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .accounts-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            padding: 10px;
+            background: #1e1e2e;
+            border-radius: 5px;
+        }
+        
+        .account-item {
+            padding: 10px;
+            border-bottom: 1px solid #585b70;
+            font-family: monospace;
+        }
+        
+        .account-item:last-child {
+            border-bottom: none;
+        }
+        
         @media (max-width: 768px) {
-            .form-row {
+            .form-row, .generator-controls {
                 flex-direction: column;
                 gap: 10px;
+            }
+            
+            .tab-button {
+                padding: 12px 10px;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -201,14 +237,15 @@
 <body>
     <div class="container">
         <header>
-            <h1>Генератор данных</h1>
-            <p class="description">Инструмент для работы с учетными данными</p>
+            <h1>DemaraScript</h1>
+            <p class="description">Удобная раьота </p>
         </header>
         
         <div class="tabs">
             <button class="tab-button active" onclick="selectTab(0)">Случайная строка</button>
-            <button class="tab-button" onclick="selectTab(1)">Логирование данных</button>
-            <button class="tab-button" onclick="selectTab(2)">Firstmail.ltd</button>
+            <button class="tab-button" onclick="selectTab(1)">Генератор аккаунтов</button>
+            <button class="tab-button" onclick="selectTab(2)">Логирование данных</button>
+            <button class="tab-button" onclick="selectTab(3)">Firstmail.ltd</button>
         </div>
         
         <div class="tab-content active" id="tab1">
@@ -236,6 +273,37 @@
         </div>
         
         <div class="tab-content" id="tab2">
+            <h2>Генератор случайных аккаунтов</h2>
+            <p>Генерация учетных записей в формате xxxxxxxxxx@yahoo.com:password</p>
+            
+            <div class="generator-controls">
+                <div class="input-group">
+                    <label for="accountCount">Количество аккаунтов:</label>
+                    <input type="number" id="accountCount" min="1" max="100" value="1">
+                </div>
+                
+                <div class="input-group">
+                    <label for="passwordPattern">Шаблон пароля:</label>
+                    <input type="text" id="passwordPattern" value="gggggygggggyy" readonly>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Пояснение шаблона:</label>
+                <p>g - случайная буква (имя/фамилия), y - случайная цифра</p>
+            </div>
+            
+            <button onclick="generateAccounts()">Сгенерировать аккаунты</button>
+            <button onclick="copyAccounts()">Копировать все аккаунты</button>
+            
+            <div class="accounts-list" id="accountsList">
+                <!-- Сгенерированные аккаунты будут здесь -->
+            </div>
+            
+            <div id="accountsCopySuccess" class="success-message hidden">Аккаунты скопированы в буфер обмена!</div>
+        </div>
+        
+        <div class="tab-content" id="tab3">
             <h2>Логирование данных</h2>
             <p>Заполните форму для создания записи в нужном формате.</p>
             
@@ -290,7 +358,7 @@
             <div id="logCopySuccess" class="success-message hidden">Запись скопирована в буфер обмена!</div>
         </div>
         
-        <div class="tab-content" id="tab3">
+        <div class="tab-content" id="tab4">
             <h2>Firstmail.ltd</h2>
             <p>Нажмите кнопку ниже, чтобы открыть Firstmail.ltd в новом окне.</p>
             
@@ -301,6 +369,11 @@
     <script>
         // Переменная для хранения данных из файла
         let logPasData = [];
+        let generatedAccounts = [];
+        
+        // Списки для генерации имен и фамилий
+        const firstNames = ['ivan', 'alex', 'max', 'john', 'david', 'mike', 'steve', 'tom', 'peter', 'paul', 'andrew', 'mark', 'james', 'robert', 'daniel'];
+        const lastNames = ['smith', 'johnson', 'williams', 'brown', 'jones', 'miller', 'davis', 'garcia', 'rodriguez', 'wilson', 'anderson', 'taylor', 'thomas', 'moore', 'jackson'];
         
         // Функция для переключения вкладок
         function selectTab(tabIndex) {
@@ -386,6 +459,70 @@
             
             // Показать сообщение об успехе
             showTemporaryMessage('Текст успешно скопирован в буфер обмена!', 'success');
+        }
+        
+        // Функция для генерации случайных аккаунтов
+        function generateAccounts() {
+            const count = parseInt(document.getElementById('accountCount').value) || 5;
+            const accountsList = document.getElementById('accountsList');
+            accountsList.innerHTML = '';
+            generatedAccounts = [];
+            
+            for (let i = 0; i < count; i++) {
+                // Генерация email (10 случайных букв)
+                let email = '';
+                const letters = 'abcdefghijklmnopqrstuvwxyz';
+                for (let j = 0; j < 10; j++) {
+                    email += letters.charAt(Math.floor(Math.random() * letters.length));
+                }
+                email += '@yahoo.com';
+                
+                // Генерация пароля по шаблону gggggygggggyy
+                let password = '';
+                
+                // ggggg - 5 букв (случайное имя)
+                for (let j = 0; j < 5; j++) {
+                    password += firstNames[Math.floor(Math.random() * firstNames.length)].charAt(0);
+                }
+                
+                // y - 1 случайная цифра
+                password += Math.floor(Math.random() * 10);
+                
+                // ggggg - 5 букв (случайная фамилия)
+                for (let j = 0; j < 5; j++) {
+                    password += lastNames[Math.floor(Math.random() * lastNames.length)].charAt(0);
+                }
+                
+                // yy - 2 случайные цифры
+                password += Math.floor(Math.random() * 10);
+                password += Math.floor(Math.random() * 10);
+                
+                const account = `${email}:${password}`;
+                generatedAccounts.push(account);
+                
+                const accountItem = document.createElement('div');
+                accountItem.className = 'account-item';
+                accountItem.textContent = account;
+                accountsList.appendChild(accountItem);
+            }
+        }
+        
+        // Функция для копирования всех аккаунтов
+        function copyAccounts() {
+            if (generatedAccounts.length === 0) {
+                showTemporaryMessage('Сначала сгенерируйте аккаунты!', 'error');
+                return;
+            }
+            
+            const textToCopy = generatedAccounts.join('\n');
+            copyToClipboard(textToCopy);
+            
+            // Показать сообщение об успехе
+            const successMessage = document.getElementById('accountsCopySuccess');
+            successMessage.classList.remove('hidden');
+            setTimeout(() => {
+                successMessage.classList.add('hidden');
+            }, 3000);
         }
         
         // Функция для копирования текста в буфер обмена
@@ -499,6 +636,7 @@
         // Загрузить данные при загрузке страницы
         window.onload = function() {
             loadData();
+            generateAccounts(); // Автоматически генерируем несколько аккаунтов при загрузке
         };
     </script>
 </body>
