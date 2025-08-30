@@ -328,6 +328,64 @@
             flex: 1;
         }
         
+        /* Стили для модального окна ввода пароля */
+        #password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 30, 46, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .password-container {
+            background: #313244;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .password-container h2 {
+            margin-bottom: 20px;
+            color: #89b4fa;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #1e1e2e;
+            border: 1px solid #585b70;
+            border-radius: 5px;
+            color: #cdd6f4;
+            font-size: 16px;
+        }
+        
+        .password-btn {
+            background: linear-gradient(135deg, #89b4fa, #cba6f7);
+            color: #1e1e2e;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+        }
+        
+        .password-error {
+            color: #f38ba8;
+            margin-top: 10px;
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .form-row, .generator-controls {
                 flex-direction: column;
@@ -354,7 +412,17 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Модальное окно для ввода пароля -->
+    <div id="password-modal">
+        <div class="password-container">
+            <h2>Введите пароль для доступа</h2>
+            <input type="password" id="password-input" class="password-input" placeholder="Пароль">
+            <button id="password-submit" class="password-btn">Войти</button>
+            <div id="password-error" class="password-error">Неверный пароль. Попробуйте снова.</div>
+        </div>
+    </div>
+
+    <div class="container" style="display: none;">
         <header>
             <h1>DemaraScript</h1>
             <p class="description">Последнее обновление</p>
@@ -367,7 +435,7 @@
         </div>
         
         <div class="tab-content active" id="firstmail">
-            <h2>Firstmail.ltd - Первая строка</h2>
+            <h2>Firstmail.ltd - Случайная строка</h2>
             <div class="status-message info" id="firstmail-status">
                 Загрузка данных из LogPas.txt...
             </div>
@@ -380,26 +448,17 @@
             </div>
             
             <div class="result">
-                <p>Результат: <span id="firstLineResult"></span></p>
+                <p>Результат: <span id="randomLineResult"></span></p>
             </div>
             
             <div class="button-group">
-                <button onclick="loadData()">Обновить данные</button>
-                <button onclick="copyFirstLine()">Скопировать</button>
+                <button onclick="loadData()">Сгенерировать снова</button>
+                <button onclick="copyRandomLine()">Скопировать</button>
                 <button onclick="goToWebsite('firstmail')">Перейти на сайт</button>
             </div>
             
             <div id="copySuccess" class="success-message hidden">Текст успешно скопирован в буфер обмена!</div>
             <div id="errorMessage" class="error-message hidden">Ошибка: Файл LogPas.txt не найден!</div>
-            
-            <div class="instructions">
-                <h3>Как использовать:</h3>
-                <ul>
-                    <li>Первая строка из файла LogPas.txt автоматически загружается и копируется</li>
-                    <li>Используйте кнопку "Обновить данные" для перезагрузки файла</li>
-                    <li>Функция рандомизации теперь исключает первую строку</li>
-                </ul>
-            </div>
         </div>
         
         <div class="tab-content" id="outlook">
@@ -424,7 +483,7 @@
                     <li>Адрес автоматически генерируется и копируется при переходе на вкладку</li>
                     <li>Используйте его для регистрации на сайтах</li>
                     <li>Проверяйте входящие письма на Outlook</li>
-                    <li>Не забывайте сохранять почту</li>
+                    <li>Не забывайте созранять почту</li>
                 </ul>
             </div>
         </div>
@@ -486,11 +545,78 @@
     </div>
 
     <script>
-        /* Глобальные переменные, флаги состояния и базовые значения */
+        // Глобальные переменные, флаги состояния и базовые значения
         let logPasData = [];
         let outlookEmail = '';
-        let currentFirstLine = '';
+        let currentRandomLine = '';
         let firstMailLoaded = false;
+        let correctPassword = '';
+
+        // Функция для проверки пароля
+        async function checkPassword() {
+            try {
+                // Загружаем пароль из файла userpas.txt
+                const response = await fetch('userpas.txt', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Файл с паролем не найден');
+                }
+                const passwordText = await response.text();
+                correctPassword = passwordText.trim();
+                
+                // Обработчик для кнопки ввода пароля
+                document.getElementById('password-submit').addEventListener('click', validatePassword);
+                document.getElementById('password-input').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        validatePassword();
+                    }
+                });
+            } catch (error) {
+                document.getElementById('password-error').textContent = 'Ошибка загрузки файла пароля';
+                document.getElementById('password-error').style.display = 'block';
+                console.error('Ошибка загрузки пароля:', error);
+            }
+        }
+
+        // Функция проверки введенного пароля
+        function validatePassword() {
+            const inputPassword = document.getElementById('password-input').value;
+            const errorElement = document.getElementById('password-error');
+            
+            if (inputPassword === correctPassword) {
+                // Пароль верный - скрываем модальное окно и показываем контент
+                document.getElementById('password-modal').style.display = 'none';
+                document.querySelector('.container').style.display = 'block';
+                
+                // Инициализируем приложение
+                initializeApp();
+            } else {
+                // Пароль неверный - показываем ошибку
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Инициализация приложения после успешного ввода пароля
+        function initializeApp() {
+            // Загружаем данные при первой загрузке
+            loadData();
+            
+            // Инициализируем вкладки
+            initTabs();
+            
+            // Генерируем первый Outlook email
+            generateOutlookEmail();
+        }
+
+        // Инициализация вкладок
+        function initTabs() {
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+        }
 
         /* Загрузка данных из LogPas.txt, расположенного в той же директории */
         async function loadData() {
@@ -515,19 +641,7 @@
                 logPasData = lines;
                 firstMailLoaded = true;
                 statusElement.textContent = 'Данные успешно загружены! Загружено строк: ' + logPasData.length;
-                
-                // Берем первую строку для Firstmail.ltd
-                if (logPasData.length > 0) {
-                    currentFirstLine = logPasData[0];
-                    document.getElementById('firstLineResult').textContent = currentFirstLine;
-                    
-                    // Автоматическое копирование первой строки
-                    copyToClipboard(currentFirstLine).then(() => {
-                        copySuccess.textContent = 'Первая строка успешно скопирована в буфер обмена!';
-                        copySuccess.classList.remove('hidden');
-                        setTimeout(() => copySuccess.classList.add('hidden'), 3000);
-                    });
-                }
+                generateRandomLine();
             } catch (e) {
                 errorMessage.textContent = 'Ошибка: Файл LogPas.txt не найден или пуст!';
                 errorMessage.classList.remove('hidden');
@@ -537,28 +651,36 @@
             }
         }
         
-        /* Функция для получения случайной строки, исключая первую */
-        function getRandomLineExcludingFirst() {
-            if (logPasData.length <= 1) {
-                return ''; // Нет строк кроме первой
-            }
-            
-            // Генерируем случайный индекс, начиная со второй строки
-            const randomIndex = Math.floor(Math.random() * (logPasData.length - 1)) + 1;
-            return logPasData[randomIndex];
-        }
-        
-        /* Явное копирование первой строки пользователем */
-        function copyFirstLine() {
+        /* Генерация случайной строки из загруженных данных и автоматическое копирование */
+        function generateRandomLine() {
             const errorBox = document.getElementById('errorMessage');
-            if (!currentFirstLine) {
-                errorBox.textContent = 'Сначала загрузите данные!';
+            if (logPasData.length === 0) {
+                errorBox.textContent = 'Ошибка: Нет данных для генерации!';
                 errorBox.classList.remove('hidden');
                 return;
             }
-            copyToClipboard(currentFirstLine).then(() => {
+            const randomIndex = Math.floor(Math.random() * logPasData.length);
+            currentRandomLine = logPasData[randomIndex];
+            document.getElementById('randomLineResult').textContent = currentRandomLine;
+            copyToClipboard(currentRandomLine).then(() => {
                 const copySuccess = document.getElementById('copySuccess');
-                copySuccess.textContent = 'Первая строка успешно скопирована в буфер обмена!';
+                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
+                copySuccess.classList.remove('hidden');
+                setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+            });
+        }
+        
+        /* Явное копирование текущей сгенерированной строки пользователем */
+        function copyRandomLine() {
+            const errorBox = document.getElementById('errorMessage');
+            if (!currentRandomLine) {
+                errorBox.textContent = 'Сначала сгенерируйте строку!';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+            copyToClipboard(currentRandomLine).then(() => {
+                const copySuccess = document.getElementById('copySuccess');
+                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
                 copySuccess.classList.remove('hidden');
                 setTimeout(() => copySuccess.classList.add('hidden'), 3000);
             });
@@ -619,107 +741,108 @@
         function switchTab(tabName) {
             const buttons = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.tab-content');
-            buttons.forEach(btn => {
-                const isActive = btn.getAttribute('data-tab') === tabName;
-                btn.classList.toggle('active', isActive);
-            });
-            contents.forEach(view => {
-                const isActive = view.id === tabName;
-                view.classList.toggle('active', isActive);
-            });
-            if (tabName === 'firstmail' && !firstMailLoaded) {
-                loadData();
-            }
-            if (tabName === 'outlook') {
-                generateOutlookEmail();
-            }
-        }
-        
-        /* Показ и скрытие полей даты/времени при выборе статуса */
-        function toggleDateTime() {
-            const select = document.getElementById('statusSelect');
-            const container = document.getElementById('datetimeContainer');
-            const need = select.value === 'BANNED';
-            container.classList.toggle('hidden', !need);
-        }
-        
-        /* Генерация строки лога из полей формы */
-        function generateLog() {
-            const data = document.getElementById('dataInput').value.trim();
-            const platform = document.getElementById('platformSelect').value.trim();
-            const prefixRaw = document.getElementById('prefixInput').value.trim();
-            const status = document.getElementById('statusSelect').value.trim();
-            const dateVal = document.getElementById('dateInput').value;
-            const timeVal = document.getElementById('timeInput').value;
             
-            if (!data) {
-                document.getElementById('logResult').textContent = 'Ошибка: заполните поле данных.';
-                return;
-            }
-            
-            const prefix = prefixRaw ? `[${prefixRaw.toUpperCase()}] ` : '';
-            let suffix = '';
-            if (status) {
-                if (status === 'BANNED') {
-                    const dt = [dateVal || '----‑--‑--', timeVal || '--:--'].join(' ');
-                    suffix = ` | ${status} ${dt}`;
+            buttons.forEach(button => {
+                if (button.getAttribute('data-tab') === tabName) {
+                    button.classList.add('active');
                 } else {
-                    suffix = ` | ${status}`;
+                    button.classList.remove('active');
+                }
+            });
+            
+            contents.forEach(content => {
+                if (content.id === tabName) {
+                    content.classList.add('active');
+                    // При переключении на вкладку Outlook генерируем новый email
+                    if (tabName === 'outlook') {
+                        generateOutlookEmail();
+                    }
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+        
+        /* Функция для копирования текста в буфер обмена */
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.error('Ошибка при копировании: ', err);
+                return false;
+            }
+        }
+        
+        /* Логирование данных - переключение видимости даты/времени */
+        function toggleDateTime() {
+            const statusSelect = document.getElementById('statusSelect');
+            const datetimeContainer = document.getElementById('datetimeContainer');
+            
+            if (statusSelect.value === 'BANNED') {
+                datetimeContainer.classList.remove('hidden');
+            } else {
+                datetimeContainer.classList.add('hidden');
+            }
+        }
+        
+        /* Генерация строки лога на основе введенных данных */
+        function generateLog() {
+            const dataInput = document.getElementById('dataInput').value;
+            const platform = document.getElementById('platformSelect').value;
+            const prefix = document.getElementById('prefixInput').value || 'E/T';
+            const status = document.getElementById('statusSelect').value;
+            
+            if (!dataInput) {
+                alert('Введите данные в формате email:password,name');
+                return;
+            }
+            
+            let logEntry = `${platform}|${prefix}|${dataInput}`;
+            
+            if (status) {
+                logEntry += `|${status}`;
+                
+                if (status === 'BANNED') {
+                    const dateInput = document.getElementById('dateInput').value;
+                    const timeInput = document.getElementById('timeInput').value;
+                    
+                    if (dateInput && timeInput) {
+                        // Форматируем дату и время в нужный формат
+                        const date = new Date(`${dateInput}T${timeInput}`);
+                        const formattedDate = date.toLocaleDateString('ru-RU');
+                        const formattedTime = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        
+                        logEntry += `|${formattedDate} ${formattedTime}`;
+                    }
                 }
             }
             
-            const result = `${prefix}${platform} | ${data}${suffix}`;
-            document.getElementById('logResult').textContent = result;
+            document.getElementById('logResult').textContent = logEntry;
         }
         
-        /* Копирование сгенерированного лога в буфер обмена с уведомлением */
+        /* Копирование сгенерированного лога */
         function copyLog() {
-            const text = document.getElementById('logResult').textContent.trim();
-            if (!text) {
+            const logText = document.getElementById('logResult').textContent;
+            if (!logText) {
+                alert('Сначала сгенерируйте запись!');
                 return;
             }
-            copyToClipboard(text).then(() => {
-                const box = document.getElementById('logCopySuccess');
-                box.classList.remove('hidden');
-                setTimeout(() => box.classList.add('hidden'), 3000);
-            });
-        }
-        
-        /* Универсальная функция копирования с запасным вариантом для несовместимых окружений */
-        function copyToClipboard(text) {
-            if (navigator.clipboard && window.isSecureContext) {
-                return navigator.clipboard.writeText(text);
-            }
-            return new Promise((resolve, reject) => {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-9999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    const ok = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    ok ? resolve() : reject();
-                } catch (e) {
-                    document.body.removeChild(textArea);
-                    reject(e);
+            
+            copyToClipboard(logText).then(success => {
+                const copySuccess = document.getElementById('logCopySuccess');
+                if (success) {
+                    copySuccess.textContent = 'Запись скопирована в буфер обмена!';
+                    copySuccess.classList.remove('hidden');
+                    setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+                } else {
+                    alert('Не удалось скопировать запись. Скопируйте вручную.');
                 }
             });
         }
         
-        /* Установка обработчиков и начальная инициализация интерфейса после загрузки DOM */
-        document.addEventListener('DOMContentLoaded', function () {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const target = this.getAttribute('data-tab');
-                    switchTab(target);
-                });
-            });
-            switchTab('firstmail');
-        });
+        // Запускаем проверку пароля при загрузке страницы
+        window.addEventListener('DOMContentLoaded', checkPassword);
     </script>
 </body>
 </html>
