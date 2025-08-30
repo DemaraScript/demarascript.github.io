@@ -367,7 +367,7 @@
         </div>
         
         <div class="tab-content active" id="firstmail">
-            <h2>Firstmail.ltd - Случайная строка</h2>
+            <h2>Firstmail.ltd - Первая строка</h2>
             <div class="status-message info" id="firstmail-status">
                 Загрузка данных из LogPas.txt...
             </div>
@@ -380,17 +380,26 @@
             </div>
             
             <div class="result">
-                <p>Результат: <span id="randomLineResult"></span></p>
+                <p>Результат: <span id="firstLineResult"></span></p>
             </div>
             
             <div class="button-group">
-                <button onclick="loadData()">Сгенерировать снова</button>
-                <button onclick="copyRandomLine()">Скопировать</button>
+                <button onclick="loadData()">Обновить данные</button>
+                <button onclick="copyFirstLine()">Скопировать</button>
                 <button onclick="goToWebsite('firstmail')">Перейти на сайт</button>
             </div>
             
             <div id="copySuccess" class="success-message hidden">Текст успешно скопирован в буфер обмена!</div>
             <div id="errorMessage" class="error-message hidden">Ошибка: Файл LogPas.txt не найден!</div>
+            
+            <div class="instructions">
+                <h3>Как использовать:</h3>
+                <ul>
+                    <li>Первая строка из файла LogPas.txt автоматически загружается и копируется</li>
+                    <li>Используйте кнопку "Обновить данные" для перезагрузки файла</li>
+                    <li>Функция рандомизации теперь исключает первую строку</li>
+                </ul>
+            </div>
         </div>
         
         <div class="tab-content" id="outlook">
@@ -415,7 +424,7 @@
                     <li>Адрес автоматически генерируется и копируется при переходе на вкладку</li>
                     <li>Используйте его для регистрации на сайтах</li>
                     <li>Проверяйте входящие письма на Outlook</li>
-                    <li>Не забывайте созранять почту</li>
+                    <li>Не забывайте сохранять почту</li>
                 </ul>
             </div>
         </div>
@@ -480,7 +489,7 @@
         /* Глобальные переменные, флаги состояния и базовые значения */
         let logPasData = [];
         let outlookEmail = '';
-        let currentRandomLine = '';
+        let currentFirstLine = '';
         let firstMailLoaded = false;
 
         /* Загрузка данных из LogPas.txt, расположенного в той же директории */
@@ -506,7 +515,19 @@
                 logPasData = lines;
                 firstMailLoaded = true;
                 statusElement.textContent = 'Данные успешно загружены! Загружено строк: ' + logPasData.length;
-                generateRandomLine();
+                
+                // Берем первую строку для Firstmail.ltd
+                if (logPasData.length > 0) {
+                    currentFirstLine = logPasData[0];
+                    document.getElementById('firstLineResult').textContent = currentFirstLine;
+                    
+                    // Автоматическое копирование первой строки
+                    copyToClipboard(currentFirstLine).then(() => {
+                        copySuccess.textContent = 'Первая строка успешно скопирована в буфер обмена!';
+                        copySuccess.classList.remove('hidden');
+                        setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+                    });
+                }
             } catch (e) {
                 errorMessage.textContent = 'Ошибка: Файл LogPas.txt не найден или пуст!';
                 errorMessage.classList.remove('hidden');
@@ -516,36 +537,28 @@
             }
         }
         
-        /* Генерация случайной строки из загруженных данных и автоматическое копирование */
-        function generateRandomLine() {
-            const errorBox = document.getElementById('errorMessage');
-            if (logPasData.length === 0) {
-                errorBox.textContent = 'Ошибка: Нет данных для генерации!';
-                errorBox.classList.remove('hidden');
-                return;
+        /* Функция для получения случайной строки, исключая первую */
+        function getRandomLineExcludingFirst() {
+            if (logPasData.length <= 1) {
+                return ''; // Нет строк кроме первой
             }
-            const randomIndex = Math.floor(Math.random() * logPasData.length);
-            currentRandomLine = logPasData[randomIndex];
-            document.getElementById('randomLineResult').textContent = currentRandomLine;
-            copyToClipboard(currentRandomLine).then(() => {
-                const copySuccess = document.getElementById('copySuccess');
-                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
-                copySuccess.classList.remove('hidden');
-                setTimeout(() => copySuccess.classList.add('hidden'), 3000);
-            });
+            
+            // Генерируем случайный индекс, начиная со второй строки
+            const randomIndex = Math.floor(Math.random() * (logPasData.length - 1)) + 1;
+            return logPasData[randomIndex];
         }
         
-        /* Явное копирование текущей сгенерированной строки пользователем */
-        function copyRandomLine() {
+        /* Явное копирование первой строки пользователем */
+        function copyFirstLine() {
             const errorBox = document.getElementById('errorMessage');
-            if (!currentRandomLine) {
-                errorBox.textContent = 'Сначала сгенерируйте строку!';
+            if (!currentFirstLine) {
+                errorBox.textContent = 'Сначала загрузите данные!';
                 errorBox.classList.remove('hidden');
                 return;
             }
-            copyToClipboard(currentRandomLine).then(() => {
+            copyToClipboard(currentFirstLine).then(() => {
                 const copySuccess = document.getElementById('copySuccess');
-                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
+                copySuccess.textContent = 'Первая строка успешно скопирована в буфер обмена!';
                 copySuccess.classList.remove('hidden');
                 setTimeout(() => copySuccess.classList.add('hidden'), 3000);
             });
