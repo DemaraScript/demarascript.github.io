@@ -5,414 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DemaraScript</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #1e1e2e;
-            color: #cdd6f4;
-            line-height: 1.6;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: #313244;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        
-        header {
-            background: linear-gradient(135deg, #89b4fa, #cba6f7);
-            color: #1e1e2e;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        h1 {
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-        }
-        
-        .description {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        .tabs {
-            display: flex;
-            background: #45475a;
-            border-bottom: 2px solid #585b70;
-        }
-        
-        .tab-button {
-            padding: 15px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #cdd6f4;
-            transition: all 0.3s ease;
-            flex: 1;
-            text-align: center;
-        }
-        
-        .tab-button:hover {
-            background: #585b70;
-        }
-        
-        .tab-button.active {
-            background: #313244;
-            color: #89b4fa;
-            border-bottom: 3px solid #89b4fa;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 30px;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #cdd6f4;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            background: #1e1e2e;
-            border: 1px solid #585b70;
-            border-radius: 5px;
-            font-size: 1rem;
-            color: #cdd6f4;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #89b4fa, #cba6f7);
-            color: #1e1e2e;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background: #45475a;
-            border-radius: 5px;
-            border-left: 4px solid #89b4fa;
-            word-break: break-all;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .datetime-container {
-            margin-top: 15px;
-        }
-        
-        .success-message {
-            color: #a6e3a1;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        
-        .error-message {
-            color: #f38ba8;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        
-        .data-example {
-            margin-top: 20px;
-            padding: 15px;
-            background: #45475a;
-            border-radius: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .form-row .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(205, 214, 244, 0.3);
-            border-radius: 50%;
-            border-top-color: #89b4fa;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .generator-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .generator-controls .input-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .accounts-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 20px;
-            padding: 10px;
-            background: #1e1e2e;
-            border-radius: 5px;
-        }
-        
-        .account-item {
-            padding: 10px;
-            border-bottom: 1px solid #585b70;
-            font-family: monospace;
-        }
-        
-        .account-item:last-child {
-            border-bottom: none;
-        }
-        
-        .email-display {
-            display: flex;
-            margin: 20px 0;
-            border: 2px solid #89b4fa;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .email-text {
-            flex: 1;
-            padding: 15px;
-            font-size: 18px;
-            background: #1e1e2e;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .copy-btn {
-            background: #89b4fa;
-            color: #1e1e2e;
-            border: none;
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s ease;
-        }
-        
-        .copy-btn:hover {
-            background: #74a7f9;
-        }
-        
-        .action-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin-top: 20px;
-            background: #a6e3a1;
-            color: #1e1e2e;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        
-        .action-btn:hover {
-            background: #94d58f;
-        }
-        
-        .status-message {
-            text-align: center;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-        
-        .info {
-            background: #45475a;
-            color: #cdd6f4;
-            border-left: 4px solid #89b4fa;
-        }
-        
-        .success {
-            background: #2e3a2f;
-            color: #a6e3a1;
-            border-left: 4px solid #a6e3a1;
-        }
-        
-        .error {
-            background: #3a2e2f;
-            color: #f38ba8;
-            border-left: 4px solid #f38ba8;
-        }
-        
-        .instructions {
-            background: #45475a;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 25px;
-            border-left: 4px solid #89b4fa;
-        }
-        
-        .instructions h3 {
-            color: #89b4fa;
-            margin-bottom: 10px;
-        }
-        
-        .instructions ul {
-            padding-left: 20px;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .button-group button {
-            flex: 1;
-        }
-        
-        /* Стили для модального окна ввода пароля */
-        #password-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(30, 30, 46, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .password-container {
-            background: #313244;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        
-        .password-container h2 {
-            margin-bottom: 20px;
-            color: #89b4fa;
-        }
-        
-        .password-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            background: #1e1e2e;
-            border: 1px solid #585b70;
-            border-radius: 5px;
-            color: #cdd6f4;
-            font-size: 16px;
-        }
-        
-        .password-btn {
-            background: linear-gradient(135deg, #89b4fa, #cba6f7);
-            color: #1e1e2e;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-        }
-        
-        .password-error {
-            color: #f38ba8;
-            margin-top: 10px;
-            display: none;
-        }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #1e1e2e; color: #cdd6f4; line-height: 1.6; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #313244; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        header { background: linear-gradient(135deg, #89b4fa, #cba6f7); color: #1e1e2e; padding: 20px; text-align: center; }
+        h1 { margin-bottom: 10px; font-size: 2.2rem; }
+        .description { font-size: 1.1rem; opacity: 0.9; }
+        .tabs { display: flex; background: #45475a; border-bottom: 2px solid #585b70; }
+        .tab-button { padding: 15px 20px; background: none; border: none; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #cdd6f4; transition: all 0.3s ease; flex: 1; text-align: center; }
+        .tab-button:hover { background: #585b70; }
+        .tab-button.active { background: #313244; color: #89b4fa; border-bottom: 3px solid #89b4fa; }
+        .tab-content { display: none; padding: 30px; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #cdd6f4; }
+        input, select, textarea { width: 100%; padding: 12px; background: #1e1e2e; border: 1px solid #585b70; border-radius: 5px; font-size: 1rem; color: #cdd6f4; }
+        button { background: linear-gradient(135deg, #89b4fa, #cba6f7); color: #1e1e2e; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s ease; margin-top: 10px; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .result { margin-top: 20px; padding: 15px; background: #45475a; border-radius: 5px; border-left: 4px solid #89b4fa; word-break: break-all; }
+        .hidden { display: none; }
+        .datetime-container { margin-top: 15px; }
+        .success-message { color: #a6e3a1; font-weight: 600; margin-top: 10px; }
+        .error-message { color: #f38ba8; font-weight: 600; margin-top: 10px; }
+        .data-example { margin-top: 20px; padding: 15px; background: #45475a; border-radius: 5px; font-size: 0.9rem; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .form-row .input-group { flex: 1; margin-bottom: 0; }
+        .email-display { display: flex; margin: 20px 0; border: 2px solid #89b4fa; border-radius: 8px; overflow: hidden; }
+        .email-text { flex: 1; padding: 15px; font-size: 18px; background: #1e1e2e; overflow: hidden; text-overflow: ellipsis; }
+        .copy-btn { background: #89b4fa; color: #1e1e2e; border: none; padding: 15px 20px; cursor: pointer; font-weight: bold; transition: background 0.3s ease; }
+        .copy-btn:hover { background: #74a7f9; }
+        .action-btn { display: block; width: 100%; padding: 15px; margin-top: 20px; background: #a6e3a1; color: #1e1e2e; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s ease; }
+        .action-btn:hover { background: #94d58f; }
+        .status-message { text-align: center; padding: 15px; margin: 15px 0; border-radius: 8px; font-weight: 500; }
+        .info { background: #45475a; color: #cdd6f4; border-left: 4px solid #89b4fa; }
+        .success { background: #2e3a2f; color: #a6e3a1; border-left: 4px solid #a6e3a1; }
+        .error { background: #3a2e2f; color: #f38ba8; border-left: 4px solid #f38ba8; }
+        .instructions { background: #45475a; padding: 20px; border-radius: 5px; margin-top: 25px; border-left: 4px solid #89b4fa; }
+        .instructions h3 { color: #89b4fa; margin-bottom: 10px; }
+        .instructions ul { padding-left: 20px; }
+        .instructions li { margin-bottom: 8px; }
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        .button-group button { flex: 1; }
+        #password-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(30, 30, 46, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .password-container { background: #313244; padding: 30px; border-radius: 10px; box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); width: 90%; max-width: 400px; text-align: center; }
+        .password-container h2 { margin-bottom: 20px; color: #89b4fa; }
+        .password-input { width: 100%; padding: 12px; margin-bottom: 20px; background: #1e1e2e; border: 1px solid #585b70; border-radius: 5px; color: #cdd6f4; font-size: 16px; }
+        .password-btn { background: linear-gradient(135deg, #89b4fa, #cba6f7); color: #1e1e2e; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; }
+        .password-error { color: #f38ba8; margin-top: 10px; display: none; }
         @media (max-width: 768px) {
-            .form-row, .generator-controls {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .tab-button {
-                padding: 12px 10px;
-                font-size: 0.85rem;
-            }
-            
-            .email-display {
-                flex-direction: column;
-            }
-            
-            .copy-btn {
-                width: 100%;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
+            .form-row, .button-group { flex-direction: column; gap: 10px; }
+            .tab-button { padding: 12px 10px; font-size: 0.85rem; }
+            .email-display { flex-direction: column; }
+            .copy-btn { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <!-- Модальное окно для ввода пароля -->
     <div id="password-modal">
         <div class="password-container">
             <h2>Введите пароль для доступа</h2>
@@ -436,9 +85,7 @@
         
         <div class="tab-content active" id="firstmail">
             <h2>Firstmail.ltd - Случайная строка</h2>
-            <div class="status-message info" id="firstmail-status">
-                Загрузка данных из LogPas.txt...
-            </div>
+            <div class="status-message info" id="firstmail-status">Загрузка данных из LogPas.txt...</div>
             
             <div class="data-example">
                 <strong>Пример данных:</strong><br>
@@ -463,9 +110,7 @@
         
         <div class="tab-content" id="outlook">
             <h2>Временный адрес @Outlook.com</h2>
-            <div class="status-message info" id="outlook-status">
-                Генерация и автоматическое копирование email...
-            </div>
+            <div class="status-message info" id="outlook-status">Генерация и автоматическое копирование email...</div>
             <div class="email-display">
                 <div class="email-text" id="outlook-email">example@outlook.com</div>
                 <button class="copy-btn" onclick="copyEmail('outlook')">Копировать</button>
@@ -483,7 +128,7 @@
                     <li>Адрес автоматически генерируется и копируется при переходе на вкладку</li>
                     <li>Используйте его для регистрации на сайтах</li>
                     <li>Проверяйте входящие письма на Outlook</li>
-                    <li>Не забывайте созранять почту</li>
+                    <li>Не забывайте сохранять почту</li>
                 </ul>
             </div>
         </div>
@@ -545,148 +190,113 @@
     </div>
 
     <script>
-        // Глобальные переменные, флаги состояния и базовые значения
         let logPasData = [];
         let outlookEmail = '';
         let currentRandomLine = '';
-        let firstMailLoaded = false;
         let correctPassword = '';
 
-        // Функция для проверки пароля
         async function checkPassword() {
             try {
-                // Загружаем пароль из файла userpas.txt
-                const response = await fetch('userpas.txt', { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error('Файл с паролем не найден');
-                }
-                const passwordText = await response.text();
-                correctPassword = passwordText.trim();
+                const response = await fetch('LogPas.txt', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Файл с паролем не найден');
+                const text = await response.text();
+                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
                 
-                // Обработчик для кнопки ввода пароля
+                if (lines.length === 0) throw new Error('Файл пуст');
+                
+                correctPassword = lines[0];
+                logPasData = lines.slice(1);
+                
                 document.getElementById('password-submit').addEventListener('click', validatePassword);
                 document.getElementById('password-input').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        validatePassword();
-                    }
+                    if (e.key === 'Enter') validatePassword();
                 });
             } catch (error) {
                 document.getElementById('password-error').textContent = 'Ошибка загрузки файла пароля';
                 document.getElementById('password-error').style.display = 'block';
-                console.error('Ошибка загрузки пароля:', error);
             }
         }
 
-        // Функция проверки введенного пароля
         function validatePassword() {
             const inputPassword = document.getElementById('password-input').value;
             const errorElement = document.getElementById('password-error');
             
             if (inputPassword === correctPassword) {
-                // Пароль верный - скрываем модальное окно и показываем контент
                 document.getElementById('password-modal').style.display = 'none';
                 document.querySelector('.container').style.display = 'block';
-                
-                // Инициализируем приложение
                 initializeApp();
             } else {
-                // Пароль неверный - показываем ошибку
                 errorElement.style.display = 'block';
             }
         }
 
-        // Инициализация приложения после успешного ввода пароля
         function initializeApp() {
-            // Загружаем данные при первой загрузке
-            loadData();
+            if (logPasData.length > 0) {
+                document.getElementById('firstmail-status').textContent = 'Данные успешно загружены! Загружено строк: ' + logPasData.length;
+                generateRandomLine();
+            } else {
+                document.getElementById('errorMessage').textContent = 'Ошибка: Нет данных для генерации!';
+                document.getElementById('errorMessage').classList.remove('hidden');
+            }
             
-            // Инициализируем вкладки
             initTabs();
-            
-            // Генерируем первый Outlook email
             generateOutlookEmail();
         }
 
-        // Инициализация вкладок
         function initTabs() {
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(button => {
+            document.querySelectorAll('.tab-button').forEach(button => {
                 button.addEventListener('click', () => {
-                    const tabName = button.getAttribute('data-tab');
-                    switchTab(tabName);
+                    switchTab(button.getAttribute('data-tab'));
                 });
             });
         }
 
-        /* Загрузка данных из LogPas.txt, расположенного в той же директории */
-        async function loadData() {
-            const statusElement = document.getElementById('firstmail-status');
-            const errorMessage = document.getElementById('errorMessage');
-            const copySuccess = document.getElementById('copySuccess');
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            statusElement.textContent = 'Загрузка данных из LogPas.txt...';
-            errorMessage.classList.add('hidden');
-            copySuccess.classList.add('hidden');
+            document.querySelector(`.tab-button[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
             
-            try {
-                const response = await fetch('LogPas.txt', { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error('not_ok');
-                }
-                const text = await response.text();
-                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-                if (lines.length === 0) {
-                    throw new Error('empty');
-                }
-                logPasData = lines;
-                firstMailLoaded = true;
-                statusElement.textContent = 'Данные успешно загружены! Загружено строк: ' + logPasData.length;
-                generateRandomLine();
-            } catch (e) {
-                errorMessage.textContent = 'Ошибка: Файл LogPas.txt не найден или пуст!';
-                errorMessage.classList.remove('hidden');
-                statusElement.textContent = 'Ошибка загрузки данных';
-                logPasData = [];
-                firstMailLoaded = false;
-            }
+            if (tabName === 'outlook') generateOutlookEmail();
         }
-        
-        /* Генерация случайной строки из загруженных данных и автоматическое копирование */
-        function generateRandomLine() {
-            const errorBox = document.getElementById('errorMessage');
+
+        function loadData() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('copySuccess').classList.add('hidden');
+            
             if (logPasData.length === 0) {
-                errorBox.textContent = 'Ошибка: Нет данных для генерации!';
-                errorBox.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = 'Ошибка: Нет данных для генерации!';
+                document.getElementById('errorMessage').classList.remove('hidden');
                 return;
             }
+            
+            generateRandomLine();
+        }
+
+        function generateRandomLine() {
             const randomIndex = Math.floor(Math.random() * logPasData.length);
             currentRandomLine = logPasData[randomIndex];
             document.getElementById('randomLineResult').textContent = currentRandomLine;
             copyToClipboard(currentRandomLine).then(() => {
-                const copySuccess = document.getElementById('copySuccess');
-                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
-                copySuccess.classList.remove('hidden');
-                setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+                document.getElementById('copySuccess').classList.remove('hidden');
+                setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
             });
         }
-        
-        /* Явное копирование текущей сгенерированной строки пользователем */
+
         function copyRandomLine() {
-            const errorBox = document.getElementById('errorMessage');
             if (!currentRandomLine) {
-                errorBox.textContent = 'Сначала сгенерируйте строку!';
-                errorBox.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = 'Сначала сгенерируйте строку!';
+                document.getElementById('errorMessage').classList.remove('hidden');
                 return;
             }
+            
             copyToClipboard(currentRandomLine).then(() => {
-                const copySuccess = document.getElementById('copySuccess');
-                copySuccess.textContent = 'Текст успешно скопирован в буфер обмена!';
-                copySuccess.classList.remove('hidden');
-                setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+                document.getElementById('copySuccess').classList.remove('hidden');
+                setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
             });
         }
-        
-        /* Утилита генерации случайной строки для email */
+
         function generateRandomString(length) {
             const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
@@ -695,30 +305,23 @@
             }
             return result;
         }
-        
-        /* Формирование email по домену */
-        function generateEmail(domain) {
-            const prefix = generateRandomString(10);
-            return `${prefix}@${domain}`;
-        }
-        
-        /* Генерация Outlook email и моментальное копирование */
+
         function generateOutlookEmail() {
-            outlookEmail = generateEmail('outlook.com');
+            outlookEmail = `${generateRandomString(10)}@outlook.com`;
             document.getElementById('outlook-email').textContent = outlookEmail;
             copyEmail('outlook');
         }
-        
-        /* Копирование email в буфер обмена и отображение статуса */
+
         function copyEmail(type) {
-            const email = outlookEmail;
             const statusElement = document.getElementById(`${type}-status`);
-            if (!email) {
+            
+            if (!outlookEmail) {
                 statusElement.textContent = 'Сначала сгенерируйте адрес.';
                 statusElement.className = 'status-message error';
                 return;
             }
-            navigator.clipboard.writeText(email).then(() => {
+            
+            navigator.clipboard.writeText(outlookEmail).then(() => {
                 statusElement.textContent = 'Email успешно скопирован в буфер обмена!';
                 statusElement.className = 'status-message success';
                 setTimeout(() => {
@@ -730,63 +333,26 @@
                 statusElement.className = 'status-message error';
             });
         }
-        
-        /* Переход на сайт почтового сервиса в новой вкладке */
+
         function goToWebsite(type) {
             const url = type === 'firstmail' ? 'https://firstmail.ltd/ru-RU/webmail' : 'https://outlook.com';
             window.open(url, '_blank');
         }
-        
-        /* Переключение вкладок, инициализация действий при входе во вкладку */
-        function switchTab(tabName) {
-            const buttons = document.querySelectorAll('.tab-button');
-            const contents = document.querySelectorAll('.tab-content');
-            
-            buttons.forEach(button => {
-                if (button.getAttribute('data-tab') === tabName) {
-                    button.classList.add('active');
-                } else {
-                    button.classList.remove('active');
-                }
-            });
-            
-            contents.forEach(content => {
-                if (content.id === tabName) {
-                    content.classList.add('active');
-                    // При переключении на вкладку Outlook генерируем новый email
-                    if (tabName === 'outlook') {
-                        generateOutlookEmail();
-                    }
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-        }
-        
-        /* Функция для копирования текста в буфер обмена */
+
         async function copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
                 return true;
             } catch (err) {
-                console.error('Ошибка при копировании: ', err);
                 return false;
             }
         }
-        
-        /* Логирование данных - переключение видимости даты/времени */
+
         function toggleDateTime() {
-            const statusSelect = document.getElementById('statusSelect');
             const datetimeContainer = document.getElementById('datetimeContainer');
-            
-            if (statusSelect.value === 'BANNED') {
-                datetimeContainer.classList.remove('hidden');
-            } else {
-                datetimeContainer.classList.add('hidden');
-            }
+            datetimeContainer.classList.toggle('hidden', document.getElementById('statusSelect').value !== 'BANNED');
         }
-        
-        /* Генерация строки лога на основе введенных данных */
+
         function generateLog() {
             const dataInput = document.getElementById('dataInput').value;
             const platform = document.getElementById('platformSelect').value;
@@ -808,7 +374,6 @@
                     const timeInput = document.getElementById('timeInput').value;
                     
                     if (dateInput && timeInput) {
-                        // Форматируем дату и время в нужный формат
                         const date = new Date(`${dateInput}T${timeInput}`);
                         const formattedDate = date.toLocaleDateString('ru-RU');
                         const formattedTime = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -820,8 +385,7 @@
             
             document.getElementById('logResult').textContent = logEntry;
         }
-        
-        /* Копирование сгенерированного лога */
+
         function copyLog() {
             const logText = document.getElementById('logResult').textContent;
             if (!logText) {
@@ -830,18 +394,15 @@
             }
             
             copyToClipboard(logText).then(success => {
-                const copySuccess = document.getElementById('logCopySuccess');
                 if (success) {
-                    copySuccess.textContent = 'Запись скопирована в буфер обмена!';
-                    copySuccess.classList.remove('hidden');
-                    setTimeout(() => copySuccess.classList.add('hidden'), 3000);
+                    document.getElementById('logCopySuccess').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('logCopySuccess').classList.add('hidden'), 3000);
                 } else {
                     alert('Не удалось скопировать запись. Скопируйте вручную.');
                 }
             });
         }
-        
-        // Запускаем проверку пароля при загрузке страницы
+
         window.addEventListener('DOMContentLoaded', checkPassword);
     </script>
 </body>
