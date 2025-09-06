@@ -1,8 +1,7 @@
-// Конфигурация - замените на свои реальные URL
+// Конфигурация
 const CONFIG = {
     LOGPAS_URL: 'https://raw.githubusercontent.com/DemaraScript/demarascript.github.io/main/LogPas.txt',
-    LOG_URL: 'https://api.github.com/repos/DemaraScript/demarascript.github.io/contents/log.txt',
-    GITHUB_TOKEN: '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'
+    LOG_URL: 'https://script.google.com/macros/s/ВАШ_GOOGLE_APPS_SCRIPT/exec' // Замените на ваш Google Apps Script URL
 };
 
 let logPasData = [];
@@ -10,26 +9,10 @@ let outlookEmail = '';
 let currentRandomLine = '';
 let correctPassword = '';
 
-// Функция для обновления файла на GitHub
-async function updateLogFile(email, action = 'COPIED') {
+// Упрощенная функция логирования через Google Apps Script
+async function logEmailToSheet(email, action = 'COPIED') {
     try {
-        // Сначала получаем текущее содержимое файла
-        const response = await fetch(CONFIG.LOG_URL, {
-            headers: {
-                'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        if (!response.ok) throw new Error('Не удалось получить файл логов');
-
-        const fileData = await response.json();
-        const currentContent = atob(fileData.content); // Декодируем из base64
-        const sha = fileData.sha;
-
-        // Добавляем новую запись с детальным временем
-        const now = new Date();
-        const timestamp = now.toLocaleString('ru-RU', {
+        const timestamp = new Date().toLocaleString('ru-RU', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -37,39 +20,34 @@ async function updateLogFile(email, action = 'COPIED') {
             minute: '2-digit',
             second: '2-digit'
         });
-        
-        const newEntry = `[${timestamp}] - ${action} - ${email}\n`;
-        const newContent = currentContent + newEntry;
 
-        // Обновляем файл на GitHub
-        const updateResponse = await fetch(CONFIG.LOG_URL, {
-            method: 'PUT',
+        const logData = {
+            timestamp: timestamp,
+            email: email,
+            action: action,
+            source: window.location.hostname
+        };
+
+        // Отправляем данные на Google Apps Script
+        const response = await fetch(CONFIG.LOG_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Обходим CORS
             headers: {
-                'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                message: `Add log entry: ${email}`,
-                content: btoa(unescape(encodeURIComponent(newContent))), // Кодируем в base64
-                sha: sha
-            })
+            body: JSON.stringify(logData)
         });
 
-        if (!updateResponse.ok) {
-            throw new Error('Не удалось обновить файл логов');
-        }
-
-        console.log('Лог успешно обновлен на GitHub');
+        console.log('Лог отправлен в Google Sheets');
         return true;
-    } catch (error) {
-        console.error('Ошибка при обновлении лога:', error);
         
-        // Альтернативный метод: сохраняем в localStorage если GitHub API недоступно
+    } catch (error) {
+        console.error('Ошибка при отправке лога:', error);
+        
+        // Резервное сохранение в localStorage
         try {
             const logs = JSON.parse(localStorage.getItem('email_logs') || '[]');
-            const now = new Date();
-            const timestamp = now.toLocaleString('ru-RU', {
+            const timestamp = new Date().toLocaleString('ru-RU', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -81,9 +59,29 @@ async function updateLogFile(email, action = 'COPIED') {
             localStorage.setItem('email_logs', JSON.stringify(logs));
             console.log('Лог сохранен в localStorage');
         } catch (localError) {
-            console.error('Не удалось сохранить лог даже в localStorage');
+            console.error('Не удалось сохранить лог в localStorage');
         }
         
+        return false;
+    }
+}
+
+// Альтернатива: логирование через простой PHP скрипт
+async function logEmailPHP(email, action = 'COPIED') {
+    try {
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('action', action);
+        formData.append('timestamp', new Date().toISOString());
+
+        const response = await fetch('log.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.error('Ошибка PHP логгера:', error);
         return false;
     }
 }
@@ -102,7 +100,7 @@ async function copyEmailWithLogging(type) {
         await navigator.clipboard.writeText(outlookEmail);
         
         // Логируем действие
-        const logSuccess = await updateLogFile(outlookEmail, 'COPIED_OUTLOOK');
+        const logSuccess = await logEmailToSheet(outlookEmail, 'COPIED_OUTLOOK');
         
         statusElement.textContent = logSuccess 
             ? 'Email скопирован и записан в лог!'
@@ -132,10 +130,10 @@ async function copyRandomLineWithLogging() {
     try {
         await navigator.clipboard.writeText(currentRandomLine);
         
-        // Извлекаем email из строки (формат: email:password)
+        // Извлекаем email из строки
         const email = currentRandomLine.split(':')[0];
         if (email) {
-            await updateLogFile(email, 'COPIED_FIRSTMAIL');
+            await logEmailToSheet(email, 'COPIED_FIRSTMAIL');
         }
         
         document.getElementById('copySuccess').classList.remove('hidden');
@@ -146,6 +144,7 @@ async function copyRandomLineWithLogging() {
     }
 }
 
+// Остальные функции остаются без изменений
 async function checkPassword() {
     try {
         const response = await fetch(CONFIG.LOGPAS_URL, { 
@@ -237,15 +236,13 @@ function generateRandomLine() {
     currentRandomLine = logPasData[randomIndex];
     document.getElementById('randomLineResult').textContent = currentRandomLine;
     
-    // Автоматическое копирование при генерации
     copyToClipboard(currentRandomLine).then(() => {
         document.getElementById('copySuccess').classList.remove('hidden');
         setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
         
-        // Логируем автоматическое копирование
         const email = currentRandomLine.split(':')[0];
         if (email) {
-            updateLogFile(email, 'AUTO_COPIED_FIRSTMAIL');
+            logEmailToSheet(email, 'AUTO_COPIED_FIRSTMAIL');
         }
     });
 }
@@ -262,8 +259,6 @@ function generateRandomString(length) {
 function generateOutlookEmail() {
     outlookEmail = `${generateRandomString(10)}@outlook.com`;
     document.getElementById('outlook-email').textContent = outlookEmail;
-    
-    // Автоматическое копирование и логирование при генерации
     copyEmailWithLogging('outlook');
 }
 
@@ -336,21 +331,10 @@ function copyLog() {
     });
 }
 
-// Функция для просмотра логов из localStorage (для отладки)
-function viewLocalLogs() {
-    try {
-        const logs = JSON.parse(localStorage.getItem('email_logs') || '[]');
-        console.log('Логи из localStorage:', logs);
-        alert(`В localStorage сохранено ${logs.length} записей. Откройте консоль для просмотра.`);
-    } catch (error) {
-        console.error('Ошибка при чтении логов:', error);
-    }
-}
-
-// Инициализация при загрузке страницы
+// Инициализация
 window.addEventListener('DOMContentLoaded', checkPassword);
 
-// Добавляем глобальные функции для вызова из HTML
+// Глобальные функции
 window.copyEmail = copyEmailWithLogging;
 window.copyRandomLine = copyRandomLineWithLogging;
 window.loadData = loadData;
