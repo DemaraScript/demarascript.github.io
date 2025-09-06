@@ -1,7 +1,8 @@
 // Конфигурация - замените на свои реальные URL
 const CONFIG = {
     LOGPAS_URL: 'https://raw.githubusercontent.com/DemaraScript/demarascript.github.io/main/LogPas.txt',
-    // Добавьте другие URL файлов по необходимости
+    LOG_URL: 'https://api.github.com/repos/DemaraScript/demarascript.github.io/contents/log.txt',
+    GITHUB_TOKEN: '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'
 };
 
 let logPasData = [];
@@ -9,9 +10,144 @@ let outlookEmail = '';
 let currentRandomLine = '';
 let correctPassword = '';
 
+// Функция для обновления файла на GitHub
+async function updateLogFile(email, action = 'COPIED') {
+    try {
+        // Сначала получаем текущее содержимое файла
+        const response = await fetch(CONFIG.LOG_URL, {
+            headers: {
+                'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Не удалось получить файл логов');
+
+        const fileData = await response.json();
+        const currentContent = atob(fileData.content); // Декодируем из base64
+        const sha = fileData.sha;
+
+        // Добавляем новую запись с детальным временем
+        const now = new Date();
+        const timestamp = now.toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        const newEntry = `[${timestamp}] - ${action} - ${email}\n`;
+        const newContent = currentContent + newEntry;
+
+        // Обновляем файл на GitHub
+        const updateResponse = await fetch(CONFIG.LOG_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Add log entry: ${email}`,
+                content: btoa(unescape(encodeURIComponent(newContent))), // Кодируем в base64
+                sha: sha
+            })
+        });
+
+        if (!updateResponse.ok) {
+            throw new Error('Не удалось обновить файл логов');
+        }
+
+        console.log('Лог успешно обновлен на GitHub');
+        return true;
+    } catch (error) {
+        console.error('Ошибка при обновлении лога:', error);
+        
+        // Альтернативный метод: сохраняем в localStorage если GitHub API недоступно
+        try {
+            const logs = JSON.parse(localStorage.getItem('email_logs') || '[]');
+            const now = new Date();
+            const timestamp = now.toLocaleString('ru-RU', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            logs.push({ timestamp, email, action });
+            localStorage.setItem('email_logs', JSON.stringify(logs));
+            console.log('Лог сохранен в localStorage');
+        } catch (localError) {
+            console.error('Не удалось сохранить лог даже в localStorage');
+        }
+        
+        return false;
+    }
+}
+
+// Функция для копирования email с логированием
+async function copyEmailWithLogging(type) {
+    const statusElement = document.getElementById(`${type}-status`);
+    
+    if (!outlookEmail) {
+        statusElement.textContent = 'Сначала сгенерируйте адрес.';
+        statusElement.className = 'status-message error';
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(outlookEmail);
+        
+        // Логируем действие
+        const logSuccess = await updateLogFile(outlookEmail, 'COPIED_OUTLOOK');
+        
+        statusElement.textContent = logSuccess 
+            ? 'Email скопирован и записан в лог!'
+            : 'Email скопирован (ошибка записи в лог)';
+        
+        statusElement.className = 'status-message success';
+        
+        setTimeout(() => {
+            statusElement.textContent = 'Email готов к использованию';
+            statusElement.className = 'status-message info';
+        }, 3000);
+        
+    } catch (error) {
+        statusElement.textContent = 'Ошибка при копировании. Скопируйте email вручную.';
+        statusElement.className = 'status-message error';
+    }
+}
+
+// Функция для копирования случайной строки с логированием
+async function copyRandomLineWithLogging() {
+    if (!currentRandomLine) {
+        document.getElementById('errorMessage').textContent = 'Сначала сгенерируйте строку!';
+        document.getElementById('errorMessage').classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(currentRandomLine);
+        
+        // Извлекаем email из строки (формат: email:password)
+        const email = currentRandomLine.split(':')[0];
+        if (email) {
+            await updateLogFile(email, 'COPIED_FIRSTMAIL');
+        }
+        
+        document.getElementById('copySuccess').classList.remove('hidden');
+        setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
+        
+    } catch (error) {
+        alert('Не удалось скопировать текст');
+    }
+}
+
 async function checkPassword() {
     try {
-        // Используем raw.githubusercontent.com для доступа к сырому файлу
         const response = await fetch(CONFIG.LOGPAS_URL, { 
             cache: 'no-store',
             headers: {
@@ -100,22 +236,17 @@ function generateRandomLine() {
     const randomIndex = Math.floor(Math.random() * logPasData.length);
     currentRandomLine = logPasData[randomIndex];
     document.getElementById('randomLineResult').textContent = currentRandomLine;
-    copyToClipboard(currentRandomLine).then(() => {
-        document.getElementById('copySuccess').classList.remove('hidden');
-        setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
-    });
-}
-
-function copyRandomLine() {
-    if (!currentRandomLine) {
-        document.getElementById('errorMessage').textContent = 'Сначала сгенерируйте строку!';
-        document.getElementById('errorMessage').classList.remove('hidden');
-        return;
-    }
     
+    // Автоматическое копирование при генерации
     copyToClipboard(currentRandomLine).then(() => {
         document.getElementById('copySuccess').classList.remove('hidden');
         setTimeout(() => document.getElementById('copySuccess').classList.add('hidden'), 3000);
+        
+        // Логируем автоматическое копирование
+        const email = currentRandomLine.split(':')[0];
+        if (email) {
+            updateLogFile(email, 'AUTO_COPIED_FIRSTMAIL');
+        }
     });
 }
 
@@ -131,29 +262,9 @@ function generateRandomString(length) {
 function generateOutlookEmail() {
     outlookEmail = `${generateRandomString(10)}@outlook.com`;
     document.getElementById('outlook-email').textContent = outlookEmail;
-    copyEmail('outlook');
-}
-
-function copyEmail(type) {
-    const statusElement = document.getElementById(`${type}-status`);
     
-    if (!outlookEmail) {
-        statusElement.textContent = 'Сначала сгенерируйте адрес.';
-        statusElement.className = 'status-message error';
-        return;
-    }
-    
-    navigator.clipboard.writeText(outlookEmail).then(() => {
-        statusElement.textContent = 'Email успешно скопирован в буфер обмена!';
-        statusElement.className = 'status-message success';
-        setTimeout(() => {
-            statusElement.textContent = 'Email готов к использованию';
-            statusElement.className = 'status-message info';
-        }, 3000);
-    }).catch(() => {
-        statusElement.textContent = 'Ошибка при копировании. Скопируйте email вручную.';
-        statusElement.className = 'status-message error';
-    });
+    // Автоматическое копирование и логирование при генерации
+    copyEmailWithLogging('outlook');
 }
 
 function goToWebsite(type) {
@@ -225,5 +336,26 @@ function copyLog() {
     });
 }
 
+// Функция для просмотра логов из localStorage (для отладки)
+function viewLocalLogs() {
+    try {
+        const logs = JSON.parse(localStorage.getItem('email_logs') || '[]');
+        console.log('Логи из localStorage:', logs);
+        alert(`В localStorage сохранено ${logs.length} записей. Откройте консоль для просмотра.`);
+    } catch (error) {
+        console.error('Ошибка при чтении логов:', error);
+    }
+}
+
 // Инициализация при загрузке страницы
 window.addEventListener('DOMContentLoaded', checkPassword);
+
+// Добавляем глобальные функции для вызова из HTML
+window.copyEmail = copyEmailWithLogging;
+window.copyRandomLine = copyRandomLineWithLogging;
+window.loadData = loadData;
+window.generateOutlookEmail = generateOutlookEmail;
+window.goToWebsite = goToWebsite;
+window.generateLog = generateLog;
+window.copyLog = copyLog;
+window.toggleDateTime = toggleDateTime;
