@@ -236,7 +236,7 @@ async function copyToClipboard(text) {
 // Переключение видимости datetime
 function toggleDateTime() {
     const datetimeContainer = document.getElementById('datetimeContainer');
-    datetimeContainer.classList.toggle('hidden', document.getElementById('statusSelect').value !== 'BANNED');
+    datetimeContainer.classList.toggle('hidden', document.getElementById('statusSelect').value !== 'В бане');
 }
 
 // Генерация лога с форматом    /n   
@@ -257,7 +257,7 @@ function generateLog() {
     if (status) {
         logEntry += `   /n   ${status}`;
         
-        if (status === 'BANNED') {
+        if (status === 'В бане') {
             const dateInput = document.getElementById('dateInput').value;
             const timeInput = document.getElementById('timeInput').value;
             
