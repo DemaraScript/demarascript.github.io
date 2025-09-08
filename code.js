@@ -239,7 +239,7 @@ function toggleDateTime() {
     datetimeContainer.classList.toggle('hidden', document.getElementById('statusSelect').value !== 'BANNED');
 }
 
-// Генерация лога
+// Генерация лога с форматом    /n   
 function generateLog() {
     const dataInput = document.getElementById('dataInput').value;
     const platform = document.getElementById('platformSelect').value;
@@ -251,10 +251,11 @@ function generateLog() {
         return;
     }
     
-    let logEntry = `${platform}|${prefix}|${dataInput}`;
+    // Создаем запись в формате с    /n    вместо |
+    let logEntry = `${platform}   /n   ${prefix}   /n   ${dataInput}`;
     
     if (status) {
-        logEntry += `|${status}`;
+        logEntry += `   /n   ${status}`;
         
         if (status === 'BANNED') {
             const dateInput = document.getElementById('dateInput').value;
@@ -265,7 +266,7 @@ function generateLog() {
                 const formattedDate = date.toLocaleDateString('ru-RU');
                 const formattedTime = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 
-                logEntry += `|${formattedDate} ${formattedTime}`;
+                logEntry += `   /n   ${formattedDate} ${formattedTime}`;
             }
         }
     }
