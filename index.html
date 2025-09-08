@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DemaraScript</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #1e1e2e; color: #cdd6f4; line-height: 1.6; padding: 20px; }
@@ -53,8 +54,20 @@
         .password-input { width: 100%; padding: 12px; margin-bottom: 20px; background: #1e1e2e; border: 1px solid #585b70; border-radius: 5px; color: #cdd6f4; font-size: 16px; }
         .password-btn { background: linear-gradient(135deg, #89b4fa, #cba6f7); color: #1e1e2e; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; }
         .password-error { color: #f38ba8; margin-top: 10px; display: none; }
+        
+        /* Новые стили для второй вкладки */
+        .email-options { display: flex; gap: 15px; margin-bottom: 20px; }
+        .email-options select { flex: 2; }
+        .email-options input { flex: 3; }
+        .email-preview { font-size: 1.2rem; padding: 15px; background: #1e1e2e; border-radius: 8px; margin: 15px 0; text-align: center; }
+        .copy-options { display: flex; gap: 10px; }
+        .copy-options button { flex: 1; }
+        .service-icon { font-size: 1.5rem; margin-right: 10px; vertical-align: middle; }
+        .length-slider { margin: 15px 0; }
+        .length-value { text-align: center; font-weight: bold; color: #89b4fa; }
+        
         @media (max-width: 768px) {
-            .form-row, .button-group { flex-direction: column; gap: 10px; }
+            .form-row, .button-group, .email-options, .copy-options { flex-direction: column; gap: 10px; }
             .tab-button { padding: 12px 10px; font-size: 0.85rem; }
             .email-display { flex-direction: column; }
             .copy-btn { width: 100%; }
@@ -74,12 +87,12 @@
     <div class="container" style="display: none;">
         <header>
             <h1>DemaraScript</h1>
-            <p class="description">Последнее обновление</p>
+            <p class="description">Генератор email адресов и логирование данных</p>
         </header>
         
         <div class="tabs">
             <button class="tab-button active" data-tab="firstmail">Firstmail.ltd</button>
-            <button class="tab-button" data-tab="outlook">Outlook.com</button>
+            <button class="tab-button" data-tab="email-generator">Генератор почт</button>
             <button class="tab-button" data-tab="logging">Логирование данных</button>
         </div>
         
@@ -108,27 +121,46 @@
             <div id="errorMessage" class="error-message hidden">Ошибка: Файл LogPas.txt не найден!</div>
         </div>
         
-        <div class="tab-content" id="outlook">
-            <h2>Временный адрес @Outlook.com</h2>
-            <div class="status-message info" id="outlook-status">Генерация и автоматическое копирование email...</div>
-            <div class="email-display">
-                <div class="email-text" id="outlook-email">example@outlook.com</div>
-                <button class="copy-btn" onclick="copyEmail('outlook')">Копировать</button>
+        <div class="tab-content" id="email-generator">
+            <h2>Генератор email адресов</h2>
+            <div class="status-message info" id="email-status">Выберите домен и сгенерируйте email</div>
+            
+            <div class="input-group">
+                <label for="email-domain">Домен почты:</label>
+                <select id="email-domain" onchange="updateEmailPreview()">
+                    <option value="outlook.com"><i class="fab fa-microsoft service-icon"></i> @outlook.com</option>
+                    <option value="gmail.com"><i class="fab fa-google service-icon"></i> @gmail.com</option>
+                    <option value="yahoo.com"><i class="fab fa-yahoo service-icon"></i> @yahoo.com</option>
+                    <option value="yandex.ru"><i class="fas fa-envelope service-icon"></i> @yandex.ru</option>
+                    <option value="mail.ru"><i class="fas fa-envelope service-icon"></i> @mail.ru</option>
+                    <option value="protonmail.com"><i class="fas fa-lock service-icon"></i> @protonmail.com</option>
+                    <option value="icloud.com"><i class="fab fa-apple service-icon"></i> @icloud.com</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="email-length">Длина имени пользователя: <span id="length-value" class="length-value">10</span> символов</label>
+                <input type="range" id="email-length" class="length-slider" min="6" max="20" value="10" oninput="updateLengthValue()">
+            </div>
+            
+            <div class="email-preview" id="email-preview">
+                example@outlook.com
             </div>
             
             <div class="button-group">
-                <button onclick="generateOutlookEmail()">Сгенерировать снова</button>
-                <button onclick="copyEmail('outlook')">Скопировать</button>
-                <button onclick="goToWebsite('outlook')">Перейти на сайт</button>
+                <button onclick="generateEmail()"><i class="fas fa-sync-alt"></i> Сгенерировать</button>
+                <button onclick="copyEmail()"><i class="fas fa-copy"></i> Копировать email</button>
+                <button onclick="copyUsername()"><i class="fas fa-user"></i> Копировать логин</button>
             </div>
             
             <div class="instructions">
                 <h3>Как использовать:</h3>
                 <ul>
-                    <li>Адрес автоматически генерируется и копируется при переходе на вкладку</li>
-                    <li>Используйте его для регистрации на сайтах</li>
-                    <li>Проверяйте входящие письма на Outlook</li>
-                    <li>Не забывайте сохранять почту</li>
+                    <li>Выберите домен из выпадающего списка</li>
+                    <li>Настройте длину имени пользователя с помощью ползунка</li>
+                    <li>Нажмите "Сгенерировать" для создания случайного email</li>
+                    <li>Используйте "Копировать email" для полного адреса</li>
+                    <li>Используйте "Копировать логин" только для имени пользователя</li>
                 </ul>
             </div>
         </div>
@@ -148,6 +180,8 @@
                     <select id="platformSelect">
                         <option value="GOOGLE">Google</option>
                         <option value="TWITTER">Twitter</option>
+                        <option value="FACEBOOK">Facebook</option>
+                        <option value="INSTAGRAM">Instagram</option>
                     </select>
                 </div>
                 
@@ -162,6 +196,8 @@
                 <select id="statusSelect" onchange="toggleDateTime()">
                     <option value="">Пусто</option>
                     <option value="BANNED">BANNED</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
                 </select>
             </div>
             
@@ -178,18 +214,17 @@
                 </div>
             </div>
             
-            <button onclick="generateLog()">Сгенерировать запись</button>
+            <button onclick="generateLog()"><i class="fas fa-file-alt"></i> Сгенерировать запись</button>
             
             <div class="result">
                 <p>Результат: <span id="logResult"></span></p>
             </div>
             
-            <button onclick="copyLog()">Копировать результат</button>
+            <button onclick="copyLog()"><i class="fas fa-copy"></i> Копировать результат</button>
             <div id="logCopySuccess" class="success-message hidden">Запись скопирована в буфер обмена!</div>
         </div>
     </div>
 
-    <!-- Подключаем внешний JavaScript файл -->
     <script src="code.js"></script>
 </body>
 </html>
